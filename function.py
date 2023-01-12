@@ -20,7 +20,6 @@ def create_conn():
                             port="5432") 
     return conn
 
-
 # insert 系列函数的返回值都是对应的id， 比如uid/sid/iid， 但是其他函数例如查询返回的是整个list，所以不要直接从前端调用这些基本函数
 # 返回值没有json dumps的都是基本函数，用于实现更高一级的功能。
 
@@ -300,6 +299,8 @@ def my_item_list(conn, uid):
         logger.info(f'select data<{my_item}> from databse')
     return json.dumps({'code': 200, 'My item': my_item, 'is borrowing': borrowing_item})
 
+# sid list是sid信息，不展示给用户，但是当用户选择要归还此物品时，需要记录这一物品借出记录的sid并传给return item函数
+# 因为sid才是借用的唯一标识（可能存在同一个人同时借用多个同名物品1
 def my_borrow_list(conn, uid):
     """查询我正在借的物品"""
     sql = f"select * from SHARE where uid = %s;"
@@ -308,6 +309,7 @@ def my_borrow_list(conn, uid):
     start_time = []
     ddl = []
     time_remain = []
+    sid_list = []
     with conn.cursor() as cursor:
         cursor.execute(sql, (uid,))
         result = cursor.fetchall()
@@ -315,13 +317,22 @@ def my_borrow_list(conn, uid):
             iid = row[2]
             owner_raw = get_sharing_by_item_id(conn, iid)
             owner_id = owner_raw[1]
+            share_id = owner_raw[0]
+            sid_list.append(share_id)
             owner_info.append(get_user_by_id(conn, owner_id))
             item_info.append(get_item_by_id(conn, iid))
             start_time.append(str(row[3]))
             ddl.append(str(row[4]))
             time_remain.append(str(row[4] - row[3]))
         logger.info(f'select data<{result}> from databse')
-    return json.dumps({'code': 200, 'borrow item list': item_info, 'owner': owner_info, 'borrow start from':start_time, 'ddl': ddl, 'time remain':time_remain})
+    return json.dumps({'code': 200, 
+                       'msg': "查询成功",
+                       'borrow item list': item_info, 
+                       'owner': owner_info, 
+                       'borrow start from':start_time, 
+                       'ddl': ddl, 
+                       'time remain':time_remain, 
+                       'sid list':sid_list})
 
 def update_my_item(conn, arg):
     """
@@ -383,9 +394,11 @@ def search_item(conn, item_name: str):
 # 借流程：首先搜索物品，在返回的列表中选择是要借哪一个，把被选中的物品的id传入下面的borrow函数
 # borrow函数没有判断是否可借，因为搜索的时候已经返回了可借列表
 
-def borrow_item(conn, uid, iid, modi, ddl):
+def borrow_item(conn, uid, iid, modi, ddl, num):
     """
     记得传入modi最后修改时间和ddl时间，两者都是date格式
+    num是要借的物品数量,暂未实现此功能。现在非消耗品不允许堆叠，即qty都为1.
+    多个物品在items表记录为重复条目，借出归还一次只能一件物品（原子操作doge
     - 借
         - 搜索借出对象
         - 消耗品：数量-1
@@ -402,12 +415,15 @@ def borrow_item(conn, uid, iid, modi, ddl):
     qty = data[4]
     owner_id = get_owner_by_iid(conn, iid)[1]
     if not owner_id == uid:
-        update_virtue(conn, owner_id, 2)
+        update_virtue(conn, owner_id, 3)
         item_name = get_item_by_id(conn, iid)[1]
         user_name = get_user_by_id(conn, uid)[1]
-        log_content = f'<{str(modi)}> 借出<{item_name}> 给 <{user_name}>'
+        log_content = f'<{str(modi)}> 借出<{item_name}> 给 <{user_name}，功德 +3>'
         insert_virlog(conn, owner_id, log_content)
     if is_consume: #消耗品
+        # if qty-1==0:
+        #     delete_item(conn, iid, uid)
+        #     return json.dumps({'code': 200, 'msg': "全部借出，物品已删除"}) #这一部分改为借出至剩余0个时由owner来自行决定是补货update还是删除delete
         sql = f"update ITEMS QTY=%s where iid=%s;"
         with conn:
             with conn.cursor() as cursor:
@@ -418,8 +434,9 @@ def borrow_item(conn, uid, iid, modi, ddl):
     else:
         insert_share(conn, uid, iid, modi, ddl)
 
-
-def return_item(conn, uid, iid, time):
+# 先调用my_borrow_list，在页面中供用户选择要归还的项目，并从返回值中获得ownerid和借用的sid
+# time是归还时的时间, num是归还数目
+def return_item(conn, uid, owner, sid, time):
     """
     - 还
         - 可以还的条件：（使用 &&） !拥有
@@ -430,8 +447,33 @@ def return_item(conn, uid, iid, time):
             - param: 对象userid，物品id，数量
             - 返回：HTTP状态
     """
+    sql = f"delete from SHARE where sid = %s;"
+    sqlget = sql = f"select * from SHARE where sid = %s;"
+    with conn:
+        with conn.cursor() as cursor:
+            cursor.execute(sqlget, (sid,))
+            result = cursor.fetchone()
+            logger.info(f'select data<{result}> from share')
+            ddl = result[4]
+            iid = result[2]
+            cursor.execute(sql, (sid,))
+            logger.info(f'delete data from share by id<{sid}>')
+            conn.commit()
+    if uid==owner:
+        return json.dumps({'code': 200, 'msg': "自己借自己的东西并且成功归还"})
+    item_name = get_item_by_id(conn, iid)[1]
+    user_name = get_user_by_id(conn, owner)[1]
+    if ddl>time:
+        update_virtue(conn, uid, 1)
+        log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，准时，功德 +1>'
+        insert_virlog(conn, uid, log_content)
+        return json.dumps({'code': 200, 'msg': "成功按时归还"})
+    update_virtue(conn, uid, -2)
+    log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，超时，功德 -2>'
+    insert_virlog(conn, uid, log_content)
+    return json.dumps({'code': 200, 'msg': "借用超时，成功归还"})
 
-def delete_item(conn, iid):
+def delete_item(conn, iid, uid):
     """
     - 移出物品
         - 条件：拥有者想要自用、借出消耗品
@@ -439,6 +481,8 @@ def delete_item(conn, iid):
             - param：物品id，数量
             - 返回：HTTP状态
     """
+    if not get_owner_by_iid(conn, iid)[1]==uid:
+        return json.dumps({'code': 500, 'msg': "非物品拥有者，删除失败"})
     sql1 = f"delete from ITEMS where iid = %s;"
     sql2 = f"delete from CLASSIFY where iid = %s;"
     if get_sharing_by_item_id(conn, iid):
@@ -453,6 +497,9 @@ def delete_item(conn, iid):
     return json.dumps({'code': 200, 'msg': "物品已删除"})
 
 def delete_user(conn, uid):
+    """
+    此函数未完成
+    """
     sql = f"delete from USERS where uid = %s;"
     with conn:
         with conn.cursor() as cursor:
