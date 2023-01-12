@@ -20,6 +20,7 @@ def create_conn():
                             port="5432") 
     return conn
 
+
 # insert 系列函数的返回值都是对应的id， 比如uid/sid/iid， 但是其他函数例如查询返回的是整个list，所以不要直接从前端调用这些基本函数
 # 返回值没有json dumps的都是基本函数，用于实现更高一级的功能。
 
