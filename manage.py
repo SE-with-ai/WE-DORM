@@ -94,34 +94,13 @@ class Admin(db.Model):
         admin = Admin.query.get(data['id'])
         return admin
 
-# name: /[\u4e00-\u9fa5]/
-# phone: /^1[34578]\d{9}$/
-# class: /[a-zA-Z0-9_\u4e00-\u9fa5]+/
-# email: /^\w+@\w+\.\w+$/
-
-
-# @app.route("/joinus", methods=['POST'])
-# def joinus():
-#     data = request.get_json(force=True)
-#     # data = {'InfoName': '折蓉蓉', 'InfoPho': '13466777707','InfoProfess': '数学学院','InfoCls': '大一','InfoEmail':
-#     # '266455@qq.com', 'InfoGroup': ['移动', '运营'], 'InfoPower': '测试'}
-#     if data:
-#         addGroup = ",".join(data['InfoGroup'])
-#         addInfos = JoinInfos(
-#             name=data['InfoName'],
-#             phone=data['InfoPho'],
-#             profess=data['InfoProfess'],
-#             grade=data['InfoCls'],
-#             email=data['InfoEmail'],
-#             group=addGroup,
-#             power=data['InfoPower']
-#         )
-#         db.session.add(addInfos)
-#         db.session.commit()
-#         return jsonify({"status": True})
-#     else:
-#         return jsonify({"status": False})
-
+def get_db():
+    """Opens a new database connection if there is none yet for the
+    current application context.
+    """
+    if not hasattr(g, 'db_conn'):
+        g.db_conn = create_conn()
+    return g.db_conn
 
 @auth.verify_password
 def verify_password(name_or_token, password):
@@ -233,6 +212,7 @@ def provide_item(conn, arg, uid):
             - tag由最后一次query得到的物品的tag分析（split by comma）统计成set，保存成变量
             - 返回：HTTP状态
     """
+    conn = get_db()
     iid = insert_item(conn, arg)
     if not iid:
         return json.dumps({'code': 500, 'msg': "添加物品失败"})
@@ -242,21 +222,22 @@ def provide_item(conn, arg, uid):
         return json.dumps({'code': 500, 'msg': "添加拥有关系失败"})
     data = json.loads(arg)
     label = data['name']
-    if get_data_by_name(conn, label, 'CLASSIFY'):
+    if get_data_by_name(conn, label, 'TAGS'):
         return json.dumps({'code': 200, 'msg': "添加成功，已有标签"})
-    if not insert_classify(conn, label, iid):
+    if not insert_tag(conn, label, iid):
         return json.dumps({'code': 500, 'msg': "新建标签失败"})
     return json.dumps({'code': 200, 'msg': "添加成功，新增标签"})
 
 @app.route('/api/virtue-query', methods=['GET'])
 @auth.login_required
-def virtue_query(conn, uid):
+def virtue_query(uid):
     """
     - 查询功德
         - 接口： virtue_query
             - POST
             - 返回： HTTP状态、功德值
     """
+    conn = get_db()
     sql = f"select * from VIRTUE where uid = %s;"
     with conn:
         with conn.cursor() as cursor:
@@ -267,13 +248,14 @@ def virtue_query(conn, uid):
 
 @app.route('/api/virlog-query', methods=['GET'])
 @auth.login_required
-def virlog_query(conn, uid):
+def virlog_query(uid):
     """
     - 查询功德日志，实际上是在系统的提供/借用历史记录
         - 接口： virlog_query
             - POST
             - 返回： HTTP状态、功德日志
     """
+    conn = get_db()
     sql = f"select * from VIRLOG where uid = %s;"
     with conn:
         with conn.cursor() as cursor:
@@ -299,8 +281,9 @@ def virlog_query(conn, uid):
 
 @app.route('/api/items', methods=['GET'])
 @auth.login_required
-def my_item_list(conn, uid):
+def my_item_list(uid):
     """查询我提供的和正在借出的物品"""
+    conn = get_db()
     sql = f"select * from OWN where uid = %s;"
     my_item = []
     borrowing_item = [] # 一串0和1， 1代表对应物品正在借出
@@ -321,8 +304,9 @@ def my_item_list(conn, uid):
 
 @app.route('/api/borrow-list', methods=['GET'])
 @auth.login_required
-def my_borrow_list(conn, uid):
+def my_borrow_list(uid):
     """查询我正在借的物品"""
+    conn = get_db()
     sql = f"select * from SHARE where uid = %s;"
     item_info = []
     owner_info = []
@@ -346,11 +330,12 @@ def my_borrow_list(conn, uid):
 
 @app.route('/api/update-item', methods=['GET'])
 @auth.login_required
-def update_my_item(conn, arg):
+def update_my_item(arg):
     """
     在不改变name的情况下更新物品信息，要求输入所有信息的更新。
     原信息用get_data_by_name函数获得，用户在原基础上修改后，把包括iid的全部表项传入此函数
     """
+    conn = get_db()
     data = json.loads(arg)
     sql = f"update ITEMS BRAND=%s, DESCRIPTION=%s, QTY=%s, IS_CONSUME=%s where iid=%s;"
     with conn:
@@ -362,10 +347,11 @@ def update_my_item(conn, arg):
 
 @app.route('/api/update-virtue', methods=['POST'])
 @auth.login_required
-def update_virtue(conn, uid, num):
+def update_virtue(uid, num):
     """
     num是功德改变量，若减去则为负
     """
+    conn = get_db()
     sql = f"select * from VIRTUE where uid = %s;"
     with conn:
         with conn.cursor() as cursor:
@@ -383,7 +369,7 @@ def update_virtue(conn, uid, num):
 
 @app.route('/api/search-item', methods=['POST'])
 @auth.login_required
-def search_item(conn, item_name: str):
+def search_item(item_name: str):
     """fetch data by item_name
 
     Args:
@@ -392,6 +378,7 @@ def search_item(conn, item_name: str):
     Returns:
         物品信息列表，是否正在借出的列表，1代表借出中
     """
+    conn = get_db()
     sql = f"select * from ITEMS where NAME = %s;"
     item_info = []
     is_borrowing = []
@@ -412,7 +399,7 @@ def search_item(conn, item_name: str):
 
 @app.route('/api/borrow-item', methods=['GET'])
 @auth.login_required
-def borrow_item(conn, uid, iid, modi, ddl):
+def borrow_item(uid, iid, modi, ddl):
     """
     记得传入modi最后修改时间和ddl时间，两者都是date格式
     - 借
@@ -426,6 +413,7 @@ def borrow_item(conn, uid, iid, modi, ddl):
             - 参数: userid
             - 返回：HTTP状态
     """
+    conn = get_db()
     data = get_item_by_id(conn, iid)
     is_consume = data[5]
     qty = data[4]
@@ -450,7 +438,7 @@ def borrow_item(conn, uid, iid, modi, ddl):
 
 @app.route('/api/return-item', methods=['GET'])
 @auth.login_required
-def return_item(conn, uid, iid, time):
+def return_item(uid, iid, time):
     """
     - 还
         - 可以还的条件：（使用 &&） !拥有
@@ -461,10 +449,11 @@ def return_item(conn, uid, iid, time):
             - param: 对象userid，物品id，数量
             - 返回：HTTP状态
     """
+    conn = get_db()
 
 @app.route('/api/delete-item', methods=['GET'])
 @auth.login_required
-def delete_item(conn, iid):
+def delete_item(iid):
     """
     - 移出物品
         - 条件：拥有者想要自用、借出消耗品
@@ -472,8 +461,9 @@ def delete_item(conn, iid):
             - param：物品id，数量
             - 返回：HTTP状态
     """
+    conn = get_db()
     sql1 = f"delete from ITEMS where iid = %s;"
-    sql2 = f"delete from CLASSIFY where iid = %s;"
+    sql2 = f"delete from TAGS where iid = %s;"
     if get_sharing_by_item_id(conn, iid):
         return json.dumps({'code': 500, 'msg': "物品正在借出，无法删除"})
     with conn:
@@ -481,13 +471,14 @@ def delete_item(conn, iid):
             cursor.execute(sql1, (iid,))
             logger.info(f'delete data from items by id<{iid}>')
             cursor.execute(sql2, (iid,))
-            logger.info(f'delete data from classify by id<{iid}>')
+            logger.info(f'delete data from tags by id<{iid}>')
             conn.commit()
     return json.dumps({'code': 200, 'msg': "物品已删除"})
 
-@app.route('/api/borrow-item', methods=['GET'])
+@app.route('/api/delete-user', methods=['GET'])
 @auth.login_required
-def delete_user(conn, uid):
+def delete_user(uid):
+    conn = get_db()
     sql = f"delete from USERS where uid = %s;"
     with conn:
         with conn.cursor() as cursor:
@@ -496,10 +487,10 @@ def delete_user(conn, uid):
             conn.commit()
     return json.dumps({'code': 200, 'msg': "用户已删除"})
 
-conn = create_conn()
 
-print(search_item(conn, "厕所"))
+
+# print(search_item(conn, "厕所"))
 
 if __name__ == '__main__':
-    db.create_all()
-    app.run(host='0.0.0.0')
+
+    app.run(host='127.0.0.1')
