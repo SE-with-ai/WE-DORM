@@ -58,7 +58,7 @@ cur.execute('''
        FOREIGN KEY(IID) REFERENCES ITEMS ON DELETE CASCADE);''')
 
 #创建标签表
-cur.execute('''CREATE TABLE CLASSIFY
+cur.execute('''CREATE TABLE TAGS
        (NAME TEXT PRIMARY KEY NOT NULL UNIQUE,
        IID  INT        NOT NULL UNIQUE,
        FOREIGN KEY(IID) REFERENCES ITEMS ON DELETE CASCADE);''')
@@ -85,7 +85,7 @@ cur.execute("INSERT INTO USERS (NAME,DORM) \
 cur.execute("INSERT INTO ITEMS (NAME,DESCRIPTION,QTY,IS_CONSUME) \
       VALUES ('厕所', '普通的厕所', 1, 0 )");
 
-cur.execute("INSERT INTO CLASSIFY (NAME, IID) \
+cur.execute("INSERT INTO TAGS (NAME, IID) \
       VALUES ('厕所', 1)");
       
 cur.execute("INSERT INTO ITEMS (NAME,BRAND,DESCRIPTION,QTY,IS_CONSUME) \

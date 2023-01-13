@@ -89,13 +89,13 @@ def insert_own(conn, uid, iid) -> int:
             conn.commit()
     return result[0] if result else None
 
-def insert_classify(conn, cid, iid) -> int:
+def insert_tag(conn, cid, iid) -> int:
     """insert label data
 
     Args:
         cnn ([type]): the connection object to the databse
     """
-    sql = f"insert into CLASSIFY (NAME,IID) values (%s,%s) RETURNING *;"
+    sql = f"insert into TAGS (NAME,IID) values (%s,%s) RETURNING *;"
     with conn:
         with conn.cursor() as cursor:
             result = cursor.execute(sql, (cid, iid))
@@ -229,9 +229,9 @@ def provide_item(conn, arg, uid):
         return json.dumps({'code': 500, 'msg': "添加拥有关系失败"})
     data = json.loads(arg)
     label = data['name']
-    if get_data_by_name(conn, label, 'CLASSIFY'):
+    if get_data_by_name(conn, label, 'TAGS'):
         return json.dumps({'code': 200, 'msg': "添加成功，已有标签"})
-    if not insert_classify(conn, label, iid):
+    if not insert_tag(conn, label, iid):
         return json.dumps({'code': 500, 'msg': "新建标签失败"})
     return json.dumps({'code': 200, 'msg': "添加成功，新增标签"})
 
@@ -485,7 +485,7 @@ def delete_item(conn, iid, uid):
     if not get_owner_by_iid(conn, iid)[1]==uid:
         return json.dumps({'code': 500, 'msg': "非物品拥有者，删除失败"})
     sql1 = f"delete from ITEMS where iid = %s;"
-    sql2 = f"delete from CLASSIFY where iid = %s;"
+    sql2 = f"delete from TAGS where iid = %s;"
     if get_sharing_by_item_id(conn, iid):
         return json.dumps({'code': 500, 'msg': "物品正在借出，无法删除"})
     with conn:
@@ -493,7 +493,7 @@ def delete_item(conn, iid, uid):
             cursor.execute(sql1, (iid,))
             logger.info(f'delete data from items by id<{iid}>')
             cursor.execute(sql2, (iid,))
-            logger.info(f'delete data from classify by id<{iid}>')
+            logger.info(f'delete data from tags by id<{iid}>')
             conn.commit()
     return json.dumps({'code': 200, 'msg': "物品已删除"})
 
