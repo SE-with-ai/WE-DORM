@@ -210,59 +210,16 @@ def batchremove_user():
         if is_current:
             return jsonify({'code': 200, 'msg': "删除成功"})
         else:
-            return jsonify({'code': 404, 'msg': "请正确选择"})
+            return jsonify({'code': 404, 'msg': "用户不存在"})
     else:
         return jsonify({'code': 500, 'msg': "未知错误"})
 
-
-@app.route('/api/getdrawPieChart', methods=['GET'])
-@auth.login_required
-def getdrawPieChart():
-    query = db.session.query
-    Infos = query(JoinInfos)
-    total = Infos.count()
-    data_value = [0, 0, 0, 0, 0, 0, 0]  # 和下面组别一一对应
-    group_value = ['视觉', '视频', '前端', '办公', '后端', '运营', '移动']
-    for info in Infos:
-        for num in range(0, 7):
-            if group_value[num] in info.group:
-                data_value[num] += 1
-            else:
-                pass
-    return jsonify({'code': 200, 'value': data_value, 'total': total})
-
-
-@app.route('/api/getdrawLineChart', methods=['GET'])
-@auth.login_required
-def getdrawLineChart():
-    grade_value = []  # 年级汇总
-    profess_value = []  # 学院汇总
-    grade_data = {}  # 年级各学院字典
-    Infos = JoinInfos.query.all()
-    for info in Infos:
-        if info.grade not in grade_value:
-            grade_value.append(info.grade)
-            grade_data[info.grade] = []
-        if info.profess not in profess_value:
-            profess_value.append(info.profess)
-    for grade in grade_value:
-        for profess in profess_value:
-            grade_data[grade].append(0)
-    for info in Infos:
-        for grade in grade_value:
-            for profess_local_num in range(0, len(profess_value)):
-                if info.profess == profess_value[profess_local_num] and info.grade == grade:
-                    grade_data[grade][profess_local_num] += 1
-                else:
-                    pass
-    return jsonify({'code': 200, 'profess_value': profess_value, 'grade_value': grade_value, 'grade_data': grade_data})
 
 
 @auth.error_handler
 def unauthorized():
     return make_response(jsonify({'error': 'Unauthorized access'}), 401)
 
-#---------------------------------以下是功能接口---------------------------------
 
 @app.route('/api/insert-item', methods=['GET'])
 @auth.login_required
