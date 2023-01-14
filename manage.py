@@ -116,10 +116,16 @@ def provide_item(arg, uid):
     data = json.loads(arg)
     label = data['name']
     if get_data_by_name(conn, label, 'TAGS'):
-        return json.dumps({'code': 200, 'msg': "添加成功，已有标签"})
-    if not insert_tag(conn, label, iid):
+        flag = insert_tag(conn, label, iid)
+        if flag:
+            return json.dumps({'code': 200, 'msg': "添加成功，已有标签"})
         return json.dumps({'code': 500, 'msg': "新建标签失败"})
-    return json.dumps({'code': 200, 'msg': "添加成功，新增标签"})
+    else:
+        flag = insert_tag(conn, label, iid)
+        if flag:
+            return json.dumps({'code': 200, 'msg': "添加成功，新增标签"})
+        return json.dumps({'code': 500, 'msg': "新建标签失败"})
+    
 
 @app.route('/api/virtue-query', methods=['POST'])
 @login_required
