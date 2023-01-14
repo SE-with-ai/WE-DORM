@@ -14,7 +14,7 @@ cur.execute('''
        CACHE 20; 
        CREATE TABLE USERS
        (UID INT PRIMARY KEY   NOT NULL UNIQUE DEFAULT nextval('sq_user_id'),
-       NAME            TEXT   NOT NULL,
+       NAME            TEXT   NOT NULL UNIQUE,
        DORM         TEXT  NOT NULL,
        EMAIL        CHAR(50));''')
 #创建物品表
