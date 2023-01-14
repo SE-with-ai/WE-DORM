@@ -38,8 +38,8 @@ cur.execute('''
        CACHE 20; 
        CREATE TABLE OWN
        (OID INT PRIMARY KEY   NOT NULL UNIQUE DEFAULT nextval('sq_owner_id'),
-       UID  INT        NOT NULL UNIQUE,
-       IID  INT        NOT NULL UNIQUE,
+       UID  INT        NOT NULL,
+       IID  INT        NOT NULL,
        FOREIGN KEY(UID) REFERENCES USERS ON DELETE CASCADE,
        FOREIGN KEY(IID) REFERENCES ITEMS ON DELETE CASCADE);''')
 # 创建分享表
@@ -50,8 +50,8 @@ cur.execute('''
        CACHE 20; 
        CREATE TABLE SHARE
        (SID INT PRIMARY KEY NOT NULL UNIQUE DEFAULT nextval('sq_share_id'),
-       UID  INT        NOT NULL UNIQUE,
-       IID  INT        NOT NULL UNIQUE,
+       UID  INT        NOT NULL,
+       IID  INT        NOT NULL,
        MODIFIED DATE   NOT NULL,
        DDL  DATE       ,
        FOREIGN KEY(UID) REFERENCES USERS ON DELETE CASCADE,
