@@ -277,6 +277,7 @@ def my_borrow_list():
     conn = get_db()
     sql = f"select * from SHARE where uid = %s;"
     uid = login_session['uid']
+    sid_list = []
     item_info = []
     owner_info = []
     start_time = []
@@ -501,5 +502,4 @@ def delete_user(uid):
 # print(search_item(conn, "厕所"))
 
 if __name__ == '__main__':
-
     app.run(host='127.0.0.1:15000')
