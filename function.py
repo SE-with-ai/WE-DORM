@@ -7,6 +7,19 @@ import logging
 logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+def login_required(f):
+    """
+    Decorate routes to require login.
+
+    http://flask.pocoo.org/docs/1.0/patterns/viewdecorators/
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get("user_id") is None:
+            return redirect("/login")
+        return f(*args, **kwargs)
+    return decorated_function
+
 
 def create_conn():
     """get connection from envrionment variable by the conn factory
@@ -368,143 +381,5 @@ def update_virtue(conn, uid, num):
             logger.info(f'update data<{result}> to the virtue')
             conn.commit()
 
-def search_item(conn, item_name: str):
-    """fetch data by item_name
 
-    Args:
-        conn ([type]): the connection object
 
-    Returns:
-        物品信息列表，是否正在借出的列表，1代表借出中
-    """
-    sql = f"select * from ITEMS where NAME = %s;"
-    item_info = []
-    is_borrowing = []
-    with conn.cursor() as cursor:
-        cursor.execute(sql, (item_name,))
-        result = cursor.fetchall()
-        for row in result:
-            item_info.append(row)
-            if get_sharing_by_item_id(conn,row[0]):
-                is_borrowing.append(1)
-            else:
-                is_borrowing.append(0)
-        logger.info(f'select data<{result}> from item')
-    return json.dumps({'code': 200, "item info" :result, 'borrow state':is_borrowing})
-
-# 借流程：首先搜索物品，在返回的列表中选择是要借哪一个，把被选中的物品的id传入下面的borrow函数
-# borrow函数没有判断是否可借，因为搜索的时候已经返回了可借列表
-
-def borrow_item(conn, uid, iid, modi, ddl, num):
-    """
-    记得传入modi最后修改时间和ddl时间，两者都是date格式
-    num是要借的物品数量,暂未实现此功能。现在非消耗品不允许堆叠，即qty都为1.
-    多个物品在items表记录为重复条目，借出归还一次只能一件物品（原子操作doge
-    - 借
-        - 搜索借出对象
-        - 消耗品：数量-1
-        - 可以借：
-        - 更新使用权，除非拥有者自用、消耗品
-        - 功德+=2：借给非拥有者
-        - 接口：borrow
-            - POST
-            - 参数: userid
-            - 返回：HTTP状态
-    """
-    data = get_item_by_id(conn, iid)
-    is_consume = data[5]
-    qty = data[4]
-    owner_id = get_owner_by_iid(conn, iid)[1]
-    if not owner_id == uid:
-        update_virtue(conn, owner_id, 3)
-        item_name = get_item_by_id(conn, iid)[1]
-        user_name = get_user_by_id(conn, uid)[1]
-        log_content = f'<{str(modi)}> 借出<{item_name}> 给 <{user_name}，功德 +3>'
-        insert_virlog(conn, owner_id, log_content)
-    if is_consume: #消耗品
-        # if qty-1==0:
-        #     delete_item(conn, iid, uid)
-        #     return json.dumps({'code': 200, 'msg': "全部借出，物品已删除"}) #这一部分改为借出至剩余0个时由owner来自行决定是补货update还是删除delete
-        sql = f"update ITEMS QTY=%s where iid=%s;"
-        with conn:
-            with conn.cursor() as cursor:
-                result = cursor.execute(sql, (qty-1, iid))
-                result = cursor.fetchone()
-                logger.info(f'update data<{result}> to the databse')
-                conn.commit()
-    else:
-        insert_share(conn, uid, iid, modi, ddl)
-
-# 先调用my_borrow_list，在页面中供用户选择要归还的项目，并从返回值中获得ownerid和借用的sid
-# time是归还时的时间, num是归还数目
-def return_item(conn, uid, owner, sid, time):
-    """
-    - 还
-        - 可以还的条件：（使用 &&） !拥有
-        - 若是消耗品则不需要归还
-        - 超过最迟归还时间：功德-=2\*
-            else 功德 += 1
-        - 接口：return-item
-            - param: 对象userid，物品id，数量
-            - 返回：HTTP状态
-    """
-    sql = f"delete from SHARE where sid = %s;"
-    sqlget = sql = f"select * from SHARE where sid = %s;"
-    with conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sqlget, (sid,))
-            result = cursor.fetchone()
-            logger.info(f'select data<{result}> from share')
-            ddl = result[4]
-            iid = result[2]
-            cursor.execute(sql, (sid,))
-            logger.info(f'delete data from share by id<{sid}>')
-            conn.commit()
-    if uid==owner:
-        return json.dumps({'code': 200, 'msg': "自己借自己的东西并且成功归还"})
-    item_name = get_item_by_id(conn, iid)[1]
-    user_name = get_user_by_id(conn, owner)[1]
-    if ddl>time:
-        update_virtue(conn, uid, 1)
-        log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，准时，功德 +1>'
-        insert_virlog(conn, uid, log_content)
-        return json.dumps({'code': 200, 'msg': "成功按时归还"})
-    update_virtue(conn, uid, -2)
-    log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，超时，功德 -2>'
-    insert_virlog(conn, uid, log_content)
-    return json.dumps({'code': 200, 'msg': "借用超时，成功归还"})
-
-def delete_item(conn, iid, uid):
-    """
-    - 移出物品
-        - 条件：拥有者想要自用、借出消耗品
-        - 接口：remove
-            - param：物品id，数量
-            - 返回：HTTP状态
-    """
-    if not get_owner_by_iid(conn, iid)[1]==uid:
-        return json.dumps({'code': 500, 'msg': "非物品拥有者，删除失败"})
-    sql1 = f"delete from ITEMS where iid = %s;"
-    sql2 = f"delete from TAGS where iid = %s;"
-    if get_sharing_by_item_id(conn, iid):
-        return json.dumps({'code': 500, 'msg': "物品正在借出，无法删除"})
-    with conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sql1, (iid,))
-            logger.info(f'delete data from items by id<{iid}>')
-            cursor.execute(sql2, (iid,))
-            logger.info(f'delete data from tags by id<{iid}>')
-            conn.commit()
-    return json.dumps({'code': 200, 'msg': "物品已删除"})
-
-def delete_user(conn, uid):
-    """
-    此函数未完成
-    """
-    sql = f"delete from USERS where uid = %s;"
-    with conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sql, (uid,))
-            logger.info(f'delete data from databse by id<{uid}>')
-            conn.commit()
-    return json.dumps({'code': 200, 'msg': "用户已删除"})

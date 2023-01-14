@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 from function import *
 
-from flask import Flask, g, jsonify, make_response, request
+from flask import Flask, g, jsonify, make_response, request,session as login_session
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 from flask_sqlalchemy import SQLAlchemy
@@ -25,12 +25,6 @@ app = Flask(__name__)
 
 # r'/*' 是通配符，让本服务器所有的 URL 都允许跨域请求
 CORS(app, resources=r'/*')
-app.config['SECRET_KEY'] = 'hard to guess string'
-app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_RECORD_QUERIES'] = True
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + \
-    os.path.join(basedir, 'data.sqlite')
 
 db = SQLAlchemy(app)
 auth = HTTPBasicAuth()
@@ -102,7 +96,6 @@ def get_db():
         g.db_conn = create_conn()
     return g.db_conn
 
-@auth.verify_password
 def verify_password(name_or_token, password):
     if not name_or_token:
         return False
@@ -116,15 +109,42 @@ def verify_password(name_or_token, password):
     return True
 
 
-@app.route('/api/login', methods=['POST'])
-@auth.login_required
+@app.route('/login', methods=['GET','POST'])
+@login_required
 def get_auth_token():
-    token = g.admin.generate_auth_token()
-    return jsonify({'code': 200, 'msg': "登录成功", 'token': token.decode('ascii'), 'name': g.admin.name})
+        # User reached route via POST (as by submitting a form via POST)
+    if request.method == "POST":
+
+        # Ensure username was submitted
+        if not request.form.get("username"):
+            return apology("Must provide username", 403)
+
+        # Ensure password was submitted
+        elif not request.form.get("password"):
+            return apology("Must provide password", 403)
+
+        # Query database for username
+        visitor = User.query.filter_by(username=request.form.get("username")).first_or_404()
+
+        # print(visitor, visitor.id, visitor.hash, file=sys.stderr)
+
+        # Ensure username exists and password is correct
+        if not visitor or not check_password_hash(visitor.hash, request.form.get("password")):
+            return jsonify({'code': 403, 'msg': "用户/密码不存在"})
+
+        # Add user to login_session
+        login_session["user_id"] = visitor.id
+
+        # Redirect user to home page
+        return redirect("/")
+
+    # User reached route via GET (as by clicking a link or via redirect)
+    else:
+        return 
 
 
 @app.route('/api/setpwd', methods=['POST'])
-@auth.login_required
+@login_required
 def set_auth_pwd():
     data = json.loads(str(request.data, encoding="utf-8"))
     admin = Admin.query.filter_by(name=g.admin.name).first()
@@ -136,7 +156,7 @@ def set_auth_pwd():
 
 
 @app.route('/api/users/listpage', methods=['GET'])
-@auth.login_required
+@login_required
 def get_user_list():
     page_size = 4
     page = request.args.get('page', 1, type=int)
@@ -161,7 +181,7 @@ def get_user_list():
 
 
 @app.route('/api/user/remove', methods=['GET'])
-@auth.login_required
+@login_required
 def remove_user():
     remove_id = request.args.get('id', type=int)
     if remove_id:
@@ -173,7 +193,7 @@ def remove_user():
 
 
 @app.route('/api/user/batchremove', methods=['GET'])
-@auth.login_required
+@login_required
 def batchremove_user():
     remove_ids = request.args.get('ids')
     is_current = False
@@ -195,13 +215,13 @@ def batchremove_user():
 
 
 
-@auth.error_handler
+@error_handler
 def unauthorized():
     return make_response(jsonify({'error': 'Unauthorized access'}), 401)
 
 
 @app.route('/api/insert-item', methods=['GET'])
-@auth.login_required
+@login_required
 def provide_item(conn, arg, uid):
     """
     - 提供物品(insert)
@@ -229,7 +249,7 @@ def provide_item(conn, arg, uid):
     return json.dumps({'code': 200, 'msg': "添加成功，新增标签"})
 
 @app.route('/api/virtue-query', methods=['GET'])
-@auth.login_required
+@login_required
 def virtue_query(uid):
     """
     - 查询功德
@@ -246,9 +266,9 @@ def virtue_query(uid):
             logger.info(f'select data<{result}> from databse')
     return json.dumps({'code': 200, 'virtue': result[1]})
 
-@app.route('/api/virlog-query', methods=['GET'])
-@auth.login_required
-def virlog_query(uid):
+@app.route('/api/virlog-query', methods=['POST'])
+@login_required
+def virlog_query():
     """
     - 查询功德日志，实际上是在系统的提供/借用历史记录
         - 接口： virlog_query
@@ -257,6 +277,7 @@ def virlog_query(uid):
     """
     conn = get_db()
     sql = f"select * from VIRLOG where uid = %s;"
+    uid = request.form.get('uid')
     with conn:
         with conn.cursor() as cursor:
             cursor.execute(sql, (uid,))
@@ -279,12 +300,13 @@ def virlog_query(uid):
 #       - 名称-品牌-描述-数量-是消耗品-标签
 #       - 查询物品返回的状态是字符串，可以是“拥有n1个，已借出n2个”，“借用n个，还剩[还可使用时间]“
 
-@app.route('/api/items', methods=['GET'])
-@auth.login_required
-def my_item_list(uid):
+@app.route('/api/items', methods=['POST'])
+@login_required
+def my_item_list():
     """查询我提供的和正在借出的物品"""
     conn = get_db()
     sql = f"select * from OWN where uid = %s;"
+    uid = request.form.get('uid')
     my_item = []
     borrowing_item = [] # 一串0和1， 1代表对应物品正在借出
     with conn.cursor() as cursor:
@@ -302,12 +324,13 @@ def my_item_list(uid):
         logger.info(f'select data<{my_item}> from databse')
     return json.dumps({'code': 200, 'My item': my_item, 'is borrowing': borrowing_item})
 
-@app.route('/api/borrow-list', methods=['GET'])
-@auth.login_required
-def my_borrow_list(uid):
+@app.route('/api/borrow-list', methods=['POST'])
+@login_required
+def my_borrow_list():
     """查询我正在借的物品"""
     conn = get_db()
     sql = f"select * from SHARE where uid = %s;"
+    uid = request.form.get('uid')
     item_info = []
     owner_info = []
     start_time = []
@@ -328,9 +351,9 @@ def my_borrow_list(uid):
         logger.info(f'select data<{result}> from databse')
     return json.dumps({'code': 200, 'borrow item list': item_info, 'owner': owner_info, 'borrow start from':start_time, 'ddl': ddl, 'time remain':time_remain})
 
-@app.route('/api/update-item', methods=['GET'])
-@auth.login_required
-def update_my_item(arg):
+@app.route('/api/update-item', methods=['POST'])
+@login_required
+def update_my_item():
     """
     在不改变name的情况下更新物品信息，要求输入所有信息的更新。
     原信息用get_data_by_name函数获得，用户在原基础上修改后，把包括iid的全部表项传入此函数
@@ -345,8 +368,7 @@ def update_my_item(arg):
             logger.info(f'update data<{result}> to the item')
             conn.commit()
 
-@app.route('/api/update-virtue', methods=['POST'])
-@auth.login_required
+
 def update_virtue(uid, num):
     """
     num是功德改变量，若减去则为负
@@ -368,7 +390,7 @@ def update_virtue(uid, num):
             conn.commit()
 
 @app.route('/api/search-item', methods=['POST'])
-@auth.login_required
+@login_required
 def search_item(item_name: str):
     """fetch data by item_name
 
@@ -398,20 +420,19 @@ def search_item(item_name: str):
 # borrow函数没有判断是否可借，因为搜索的时候已经返回了可借列表
 
 @app.route('/api/borrow-item', methods=['GET'])
-@auth.login_required
+@login_required
 def borrow_item(uid, iid, modi, ddl):
     """
     记得传入modi最后修改时间和ddl时间，两者都是date格式
-    - 借
-        - 搜索借出对象
-        - 消耗品：数量-1
-        - 可以借：
-        - 更新使用权，除非拥有者自用、消耗品
-        - 功德+=2：借给非拥有者
-        - 接口：borrow
-            - POST
-            - 参数: userid
-            - 返回：HTTP状态
+
+    - 搜索借出对象
+    - 消耗品：数量-1
+    - 更新使用权，除非拥有者自用、消耗品
+    - 功德+=2：借给非拥有者
+    - 接口：borrow
+        - POST
+        - 参数: userid
+        - 返回：HTTP状态
     """
     conn = get_db()
     data = get_item_by_id(conn, iid)
@@ -425,6 +446,9 @@ def borrow_item(uid, iid, modi, ddl):
         log_content = f'<{str(modi)}> 借出<{item_name}> 给 <{user_name}>'
         insert_virlog(conn, owner_id, log_content)
     if is_consume: #消耗品
+        # if qty-1==0:
+        #     delete_item(conn, iid, uid)
+        #     return json.dumps({'code': 200, 'msg': "全部借出，物品已删除"}) #这一部分改为借出至剩余0个时由owner来自行决定是补货update还是删除delete
         sql = f"update ITEMS QTY=%s where iid=%s;"
         with conn:
             with conn.cursor() as cursor:
@@ -437,22 +461,50 @@ def borrow_item(uid, iid, modi, ddl):
 
 
 @app.route('/api/return-item', methods=['GET'])
-@auth.login_required
+@login_required
 def return_item(uid, iid, time):
     """
-    - 还
-        - 可以还的条件：（使用 &&） !拥有
-        - 若是消耗品则不需要归还
-        - 超过最迟归还时间：功德-=2\*
-            else 功德 += 1
-        - 接口：return-item
-            - param: 对象userid，物品id，数量
-            - 返回：HTTP状态
+    先调用my_borrow_list，在页面中供用户选择要归还的项目，并从返回值中获得ownerid和借用的sid
+    time是归还时的时间, num是归还数目
+    
+    可以还的条件：（使用 &&） !拥有
+    若是消耗品则不需要归还
+    超过最迟归还时间：功德-=2\*
+        else 功德 += 1
+    接口：return-item
+    - param: 对象userid，物品id，数量
+    - 返回：HTTP状态
     """
     conn = get_db()
+    sql = f"delete from SHARE where sid = %s;"
+    sqlget = sql = f"select * from SHARE where sid = %s;"
+    with conn:
+        with conn.cursor() as cursor:
+            cursor.execute(sqlget, (sid,))
+            result = cursor.fetchone()
+            logger.info(f'select data<{result}> from share')
+            ddl = result[4]
+            iid = result[2]
+            cursor.execute(sql, (sid,))
+            logger.info(f'delete data from share by id<{sid}>')
+            conn.commit()
+    if uid==owner:
+        return json.dumps({'code': 200, 'msg': "自己借自己的东西并且成功归还"})
+    item_name = get_item_by_id(conn, iid)[1]
+    user_name = get_user_by_id(conn, owner)[1]
+    if ddl>time:
+        update_virtue(conn, uid, 1)
+        log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，准时，功德 +1>'
+        insert_virlog(conn, uid, log_content)
+        return json.dumps({'code': 200, 'msg': "成功按时归还"})
+    update_virtue(conn, uid, -2)
+    log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，超时，功德 -2>'
+    insert_virlog(conn, uid, log_content)
+    return json.dumps({'code': 200, 'msg': "借用超时，成功归还"})
+
 
 @app.route('/api/delete-item', methods=['GET'])
-@auth.login_required
+@login_required
 def delete_item(iid):
     """
     - 移出物品
@@ -461,6 +513,9 @@ def delete_item(iid):
             - param：物品id，数量
             - 返回：HTTP状态
     """
+    if not get_owner_by_iid(conn, iid)[1]==uid:
+        return json.dumps({'code': 500, 'msg': "非物品拥有者，删除失败"})
+
     conn = get_db()
     sql1 = f"delete from ITEMS where iid = %s;"
     sql2 = f"delete from TAGS where iid = %s;"
@@ -476,7 +531,7 @@ def delete_item(iid):
     return json.dumps({'code': 200, 'msg': "物品已删除"})
 
 @app.route('/api/delete-user', methods=['GET'])
-@auth.login_required
+@login_required
 def delete_user(uid):
     conn = get_db()
     sql = f"delete from USERS where uid = %s;"
