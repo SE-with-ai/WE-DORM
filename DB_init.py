@@ -52,8 +52,8 @@ cur.execute('''
        (SID INT PRIMARY KEY NOT NULL UNIQUE DEFAULT nextval('sq_share_id'),
        UID  INT        NOT NULL UNIQUE,
        IID  INT        NOT NULL UNIQUE,
-       MODIFIED DATE NOT NULL,
-       DDL  DATE        not NULL,
+       MODIFIED DATE   NOT NULL,
+       DDL  DATE       ,
        FOREIGN KEY(UID) REFERENCES USERS ON DELETE CASCADE,
        FOREIGN KEY(IID) REFERENCES ITEMS ON DELETE CASCADE);''')
 
