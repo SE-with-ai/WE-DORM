@@ -1,19 +1,7 @@
 <script setup >
-import Home from './components/Home.vue'
+import Holding from './components/Holding.vue'
 import Borrowed from './components/Borrowed.vue'
-
-
-// TODO: fetch user id via login/register; store user id in sessionStorage
-
-const currentPath = ref(window.location.hash)
-
-window.addEventListener('hashchange', () => {
-  currentPath.value = window.location.hash
-})
-
-const currentView = computed(() => {
-  return routes[currentPath.value.slice(1) || '/'] || NotFound
-})
+import Virtue from './components/Virtue.vue'
 
 </script>
 
@@ -23,10 +11,11 @@ const currentView = computed(() => {
       <span class="text-large font-600 mr-3"> 无用物品系统 </span>
     </template>
   </el-page-header>
-  <Home/>
+
+  <Holding/>
 
   <Borrowed/>
-  
+  <Virtue/>
 
 </template>
 
