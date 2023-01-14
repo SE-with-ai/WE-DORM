@@ -59,7 +59,7 @@ cur.execute('''
 
 #创建标签表
 cur.execute('''CREATE TABLE TAGS
-       (NAME TEXT PRIMARY KEY NOT NULL UNIQUE,
+       (NAME TEXT      NOT NULL,
        IID  INT        NOT NULL UNIQUE,
        FOREIGN KEY(IID) REFERENCES ITEMS ON DELETE CASCADE);''')
 
