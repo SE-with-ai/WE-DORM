@@ -71,7 +71,7 @@ cur.execute('''CREATE TABLE VIRTUE
 
 # 日志
 cur.execute('''CREATE TABLE VIRLOG
-       (UID INT PRIMARY KEY     NOT NULL,
+       (UID INT       NOT NULL,
        VIRLOG           text,
        FOREIGN KEY(UID) REFERENCES USERS ON DELETE CASCADE);''')
 
