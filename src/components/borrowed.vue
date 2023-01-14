@@ -23,8 +23,8 @@
   </div>
 </form>
   <el-input v-model="search" placeholder="搜索想借的物品" />
-  <el-button @click="onSearch()"/>搜索</el-button>
-    
+  <el-button @click="onSearch()">搜索</el-button>
+    r
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">
     <el-table-column prop="name" label="Item" width="180" />
     <el-table-column prop="owner" label="Name" width="180" />
