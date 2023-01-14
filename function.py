@@ -44,6 +44,7 @@ def insert_user(conn, arg) -> int:
     Args:
         cnn ([type]): the connection object to the databse
     """
+
     usersql = f"insert into USERS (NAME,DORM,EMAIL) values (%s,%s,%s) RETURNING *;"
     virsql = f"insert into VIRTUE (UID, VIRTUE) values (%s,%s) RETURNING *;"
     with conn:
@@ -209,11 +210,15 @@ def get_data_by_name(conn, item_name: str, table_name):
 
     Args:
         conn ([type]): the connection object
+        item_name: name of data queried
+        table_name: name of table queried, must by either USERS or ITEMS
 
     Returns:
         [type]: the tuple data of the table
     """
     sql = f"select * from {table_name} where NAME = %s;"
+    if not table_name in ['USERS','ITEMS']:
+        return
     with conn:
         with conn.cursor() as cursor:
             cursor.execute(sql, (item_name,))
