@@ -217,7 +217,7 @@ def get_data_by_name(conn, item_name: str, table_name):
         [type]: the tuple data of the table
     """
     sql = f"select * from {table_name} where NAME = %s;"
-    if not table_name in ['USERS','ITEMS']:
+    if not table_name in ['USERS','ITEMS','TAGS']:
         return
     with conn:
         with conn.cursor() as cursor:
