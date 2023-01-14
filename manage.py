@@ -17,7 +17,7 @@ from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from itsdangerous import BadSignature, SignatureExpired
 from passlib.apps import custom_app_context
-from flask_vite import Vite
+
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -26,67 +26,11 @@ app = Flask(__name__)
 # r'/*' 是通配符，让本服务器所有的 URL 都允许跨域请求
 CORS(app, resources=r'/*')
 
-db = SQLAlchemy(app)
 auth = HTTPBasicAuth()
 CSRF_ENABLED = True
 app.debug = True
 
 
-class JoinInfos(db.Model):
-    __tablename__ = 'joininfos'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(64), index=True)
-    phone = db.Column(db.String(30))
-    profess = db.Column(db.String(64))
-    grade = db.Column(db.String(64))
-    email = db.Column(db.String(120), index=True)
-    group = db.Column(db.String(64))
-    power = db.Column(db.Text(2000))
-    pub_date = db.Column(db.DateTime, default=datetime.now())
-
-    def to_dict(self):
-        columns = self.__table__.columns.keys()
-        result = {}
-        for key in columns:
-            if key == 'pub_date':
-                value = getattr(self, key).strftime("%Y-%m-%d %H:%M:%S")
-            else:
-                value = getattr(self, key)
-            result[key] = value
-        return result
-
-
-class Admin(db.Model):
-    __tablename__ = 'admins'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32), index=True)
-    password = db.Column(db.String(128))
-
-    # 密码加密
-    def hash_password(self, password):
-        self.password = custom_app_context.encrypt(password)
-
-    # 密码解析
-    def verify_password(self, password):
-        return custom_app_context.verify(password, self.password)
-
-    # 获取token，有效时间10min
-    def generate_auth_token(self, expiration=600):
-        s = Serializer(app.config['SECRET_KEY'], expires_in=expiration)
-        return s.dumps({'id': self.id})
-
-    # 解析token，确认登录的用户身份
-    @staticmethod
-    def verify_auth_token(token):
-        s = Serializer(app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-        except SignatureExpired:
-            return None  # valid token, but expired
-        except BadSignature:
-            return None  # invalid token
-        admin = Admin.query.get(data['id'])
-        return admin
 
 def get_db():
     """Opens a new database connection if there is none yet for the
@@ -133,7 +77,7 @@ def get_auth_token():
             return jsonify({'code': 403, 'msg': "用户/密码不存在"})
 
         # Add user to login_session
-        login_session["user_id"] = visitor.id
+        login_session["uid"] = visitor.id
 
         # Redirect user to home page
         return redirect("/")
@@ -220,7 +164,7 @@ def unauthorized():
     return make_response(jsonify({'error': 'Unauthorized access'}), 401)
 
 
-@app.route('/api/insert-item', methods=['GET'])
+@app.route('/api/insert-item', methods=['POST'])
 @login_required
 def provide_item(conn, arg, uid):
     """
@@ -266,7 +210,7 @@ def virtue_query(uid):
             logger.info(f'select data<{result}> from databse')
     return json.dumps({'code': 200, 'virtue': result[1]})
 
-@app.route('/api/virlog-query', methods=['POST'])
+@app.route('/api/virlog', methods=['POST'])
 @login_required
 def virlog_query():
     """
@@ -324,13 +268,15 @@ def my_item_list():
         logger.info(f'select data<{my_item}> from databse')
     return json.dumps({'code': 200, 'My item': my_item, 'is borrowing': borrowing_item})
 
+# sid list是sid信息，不展示给用户，但是当用户选择要归还此物品时，需要记录这一物品借出记录的sid并传给return item函数
+# 因为sid才是借用的唯一标识（可能存在同一个人同时借用多个同名物品1
 @app.route('/api/borrow-list', methods=['POST'])
 @login_required
 def my_borrow_list():
     """查询我正在借的物品"""
     conn = get_db()
     sql = f"select * from SHARE where uid = %s;"
-    uid = request.form.get('uid')
+    uid = login_session['uid']
     item_info = []
     owner_info = []
     start_time = []
@@ -343,13 +289,22 @@ def my_borrow_list():
             iid = row[2]
             owner_raw = get_sharing_by_item_id(conn, iid)
             owner_id = owner_raw[1]
+            share_id = owner_raw[0]
+            sid_list.append(share_id)
             owner_info.append(get_user_by_id(conn, owner_id))
             item_info.append(get_item_by_id(conn, iid))
             start_time.append(str(row[3]))
             ddl.append(str(row[4]))
             time_remain.append(str(row[4] - row[3]))
         logger.info(f'select data<{result}> from databse')
-    return json.dumps({'code': 200, 'borrow item list': item_info, 'owner': owner_info, 'borrow start from':start_time, 'ddl': ddl, 'time remain':time_remain})
+    return json.dumps({'code': 200, 
+                       'msg': "查询成功",
+                       'borrow item list': item_info, 
+                       'owner': owner_info, 
+                       'borrow start from':start_time, 
+                       'ddl': ddl, 
+                       'time remain':time_remain, 
+                       'sid list':sid_list})
 
 @app.route('/api/update-item', methods=['POST'])
 @login_required
@@ -359,11 +314,11 @@ def update_my_item():
     原信息用get_data_by_name函数获得，用户在原基础上修改后，把包括iid的全部表项传入此函数
     """
     conn = get_db()
-    data = json.loads(arg)
+    data = request.form
     sql = f"update ITEMS BRAND=%s, DESCRIPTION=%s, QTY=%s, IS_CONSUME=%s where iid=%s;"
     with conn:
         with conn.cursor() as cursor:
-            result = cursor.execute(sql, (data[2], data[3], data[4], data[5], data[0]))
+            result = cursor.execute(sql, (data['brand'], data['description'], data['quantity'], data['is_'], data[0]))
             result = cursor.fetchone()
             logger.info(f'update data<{result}> to the item')
             conn.commit()
@@ -391,17 +346,16 @@ def update_virtue(uid, num):
 
 @app.route('/api/search-item', methods=['POST'])
 @login_required
-def search_item(item_name: str):
+def search_item():
     """fetch data by item_name
 
-    Args:
-        conn ([type]): the connection object
 
     Returns:
         物品信息列表，是否正在借出的列表，1代表借出中
     """
     conn = get_db()
     sql = f"select * from ITEMS where NAME = %s;"
+    item_name: str = request.form.get['name']
     item_info = []
     is_borrowing = []
     with conn.cursor() as cursor:
@@ -548,4 +502,4 @@ def delete_user(uid):
 
 if __name__ == '__main__':
 
-    app.run(host='127.0.0.1')
+    app.run(host='127.0.0.1:15000')
