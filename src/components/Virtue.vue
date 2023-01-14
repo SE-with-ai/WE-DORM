@@ -12,41 +12,7 @@
     </el-col>
   </el-row>
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">
-    <el-table-column prop="name" label="Name" width="180" />
-    <el-table-column prop="brand" label="Brand" width="180" />
-    <el-table-column prop="description" label="Description" width="180" />
-    <el-table-column prop="qty" label="Quantity" width="180" />
-    <el-table-column prop="is_consume" label="Consumable" width="180" />
-
-    <el-table-column
-      prop="tag"
-      label="Tag"
-      width="100"
-      :filters="tagsRef"
-      :filter-method="filterTag"
-      filter-placement="bottom-end"
-    >
-      <template #default="scope">
-        <el-tag
-          v-for="tg in scope.row.tag"
-          type="success"
-          disable-transitions
-          >{{ tg }}</el-tag>
-      </template>
-    </el-table-column>
-    <el-table-column label="Operations">
-      <template #default="scope">
-        <el-button size="small" @click="handleEdit(scope.$index, scope.row)"
-          >Edit</el-button
-        >
-        <el-button
-          size="small"
-          type="danger"
-          @click="handleDelete(scope.$index, scope.row)"
-          >Delete</el-button
-        >
-      </template>
-    </el-table-column>
+    <el-table-column prop="text" label="Log" width="180" />
   </el-table>
 
 <!--TODO:功德录-->
@@ -56,7 +22,7 @@
 
 import axios from 'axios'
 import {ref,computed,onMounted} from 'vue'
-import {Item, ItemExt} from './utils'
+import {Item, ItemExt, Virlog} from './utils'
 import { ElTable, type TableColumnCtx } from 'element-plus'
 import { deleteItem, itemsQuery, searchItem } from './api'
 import { offset } from '@floating-ui/core'
@@ -65,7 +31,7 @@ import { offset } from '@floating-ui/core'
 
 const virtueRef = ref()
 const tableRef = ref<InstanceType<typeof ElTable>>()
-const tableData= ref<ItemExt[]>([])
+const tableData= ref<Virlog[]>([])
 
 
 const filterTag = (value: string[], row: ItemExt) => {

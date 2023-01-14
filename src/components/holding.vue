@@ -1,55 +1,40 @@
 <template>
-  <el-form :model="form" label-width="120px" :hidden="!showEditor">
+<!-- form to edit -->
+  <el-form :model="editForm" label-width="120px" :hidden="!showEditor">
+
     <el-form-item label="Item Name">
-      <el-input v-model="form.name" />
+      <el-input v-model="editForm.name" required="true"/>
     </el-form-item>
-    <el-form-item label="Activity time">
-      <el-col :span="11">
-        <el-date-picker
-          v-model="form.date1"
-          type="date"
-          placeholder="Pick a date"
-          style="width: 100%"
-        />
-      </el-col>
-      <el-col :span="2" class="text-center">
-        <span class="text-gray-500">-</span>
-      </el-col>
-      <el-col :span="11">
-        <el-time-picker
-          v-model="form.date2"
-          placeholder="Pick a time"
-          style="width: 100%"
-        />
-      </el-col>
+    <el-form-item label="Brand">
+      <el-input v-model="editForm.brand" />
     </el-form-item>
-    <el-form-item label="Instant delivery">
-      <el-switch v-model="form.delivery" />
+    <el-form-item label="Description">
+      <el-input v-model="editForm.description" />
+    </el-form-item>
+    <el-form-item label="Consumable">
+      <el-switch v-model="editForm.is_consume" />
     </el-form-item>
     <el-form-item label="Activity type">
-      <el-checkbox-group v-model="form.type">
+      <el-checkbox-group v-model="editForm.type">
         <el-checkbox label="Online activities" name="type" />
         <el-checkbox label="Promotion activities" name="type" />
         <el-checkbox label="Offline activities" name="type" />
         <el-checkbox label="Simple brand exposure" name="type" />
       </el-checkbox-group>
     </el-form-item>
-    <el-form-item label="Resources">
-      <el-radio-group v-model="form.resource">
-        <el-radio label="Sponsor" />
-        <el-radio label="Venue" />
-      </el-radio-group>
-    </el-form-item>
-    <el-form-item label="Activity form">
-      <el-input v-model="form.desc" type="textarea" />
-    </el-form-item>
     <el-form-item>
       <el-button type="primary" @click="onSubmit">Create</el-button>
       <el-button>Cancel</el-button>
     </el-form-item>
   </el-form>
+
+
+  <!-- tag control buttons -->
   <el-button @click="resetTagFilter">reset date filter</el-button>
   <el-input v-model="search" placeholder="搜索想借的物品" />
+  
+  
+  <!-- owned item list -->
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">
     <el-table-column prop="name" label="Name" width="180" />
     <el-table-column prop="brand" label="Brand" width="180" />
@@ -93,7 +78,6 @@ import {ref,computed,onMounted, watchEffect} from 'vue'
 import {Item, ItemExt} from './utils'
 import { ElTable, type TableColumnCtx } from 'element-plus'
 import { deleteItem, itemsQuery, searchItem, updateItem } from './api'
-import { offset } from '@floating-ui/core'
 
 
 
@@ -131,40 +115,44 @@ const onSearch = ()=>{
 onMounted(()=>{
   tableData.value = itemsQuery()
 })
-watchEffect(async () => {
-  const response = await fetch(
-    `https://jsonplaceholder.typicode.com/todos/${todoId.value}`
-  )
-  data.value = await response.json()
-})
 
 const showEditor = ref(false)
-const form = ref({
+const editForm = ref({
       iid: 0,
   name:'',
   brand:'',
   description:'',
   qty:0,
   is_consume:false,
-  tag:[],
+  tag:[] as string[],
 })
 
-function handleEdit(row:ItemExt)
+function handleEdit(index:number,row:ItemExt)
 {
   showEditor.value = true;
+  // load data into form
+  let item = tableData.value[index]
+  editForm.value.iid = item.iid
+  editForm.value.name = item.name
+  if(item.brand)editForm.value.brand = item.brand
+  if(item.description)editForm.value.description = item.description
+  editForm.value.qty = item.qty
+  editForm.value.is_consume = item.is_consume
+  if(item.tag)editForm.value.tag = item.tag
 }
 
 const handleEditSubmit = (index: number, row: ItemExt) => {
   // 
-    let item= row;
+    let item= tableData.value[index];
+    let itemTags = {tag:[] as string[]}
     if(item.tag)delete item['tag']
-  updateItem(item)
+    itemTags['tag'] = tableData.value[index]['tag']
+  updateItem([item])
   console.log(index, row)
   showEditor.value = false;
 
 }
 
-// TODO: parse data returned by backend
 
 </script>
 
