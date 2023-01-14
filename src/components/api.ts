@@ -1,5 +1,5 @@
 import axios from "axios"
-import { dateToString, Item } from "./utils";
+import { dateToString, Item, ItemExt, Virlog } from "./utils";
 class http_request{
     method='POST';
     baseURL="https://localhost:15000";
@@ -10,53 +10,121 @@ class http_request{
         this.data = data;
     }
 }
-function make_request(url:string,data:object){
+function make_request(url:string,data:object):object{
     let req= new http_request(url,data)
     let response;
     axios(req).then((res)=>{
-        response = res;
+        response = JSON.parse(res);
+    },(reason)=>{
+        response = {msg:reason}
     })
-    return response;
+    return response ;
 }
 export function login(name:string){
-    return make_request('/login',{username:name});
+    make_request('/login',{username:name});
+
 }
 
 export function insert_item(item:Item[]){
-    return make_request('/api/insert-item',{item});
+    /* 
+    return json.dumps({'code': 500, 'msg': "添加物品失败"})
+    return json.dumps({'code': 500, 'msg': "添加拥有关系失败"})
+    return json.dumps({'code': 200, 'msg': "添加成功，已有标签"})
+    return json.dumps({'code': 500, 'msg': "新建标签失败"})
+    return json.dumps({'code': 200, 'msg': "添加成功，新增标签"})
+    */
+    let response = make_request('/api/insert-item',{item});
+    window.alert(response['msg'] as string)
 }
 
 export function virtueQuery(){
-    return make_request('/api/virtue-query',{});
+    /* 
+    return json.dumps({'code': 200, 'virtue': result[1]})
+
+*/
+    let response = make_request('/api/virtue-query',{}) as object;
+    response = response['virtue'][1]
+    if (typeof response === typeof ''){
+        response = []
+    }
+    return response
 }
 export function virlogQuery(){
-    return make_request('/api/virlog',{});
+    /* 
+    return json.dumps({'code': 200, 'virtue log': result}) */
+    let response = make_request('/api/virlog',{});
+
 }
-export function itemsQuery(){
-    return make_request('/api/items',{});
+export function itemsQuery():ItemExt[]{
+    /* 
+    return json.dumps({'code': 200, 'My item': my_item, 'is borrowing': borrowing_item})
+    */
+    // return json.dumps({'code': 200, 'My item': my_item, 'is borrowing': borrowing_item})
+    let response= make_request('/api/items',{});
+    if(response === undefined)return []
+    let result:ItemExt[] = []
+    result = response['My item'] as ItemExt[]
+    for (let res = 0;res < result.length;++res){
+        result[res]['borrowed'] = response['borrowing'][res]
+    }
+    return result
 }
 export function borrowListQuery(){
-    return make_request('/api/borrow-list',{});
+    /* 
+        return json.dumps({'code': 200, 
+                       'msg': "查询成功",
+                       'borrow_item_list': item_info, 
+                       'owner': owner_info, 
+                       'borrow start from':start_time, 
+                       'ddl': ddl, 
+                       'time remain':time_remain, 
+                       'sid list':sid_list})
+    */
+    make_request('/api/borrow-list',{});
+
 }
 export function updateItem(item:Item[]){
-    return make_request('/api/update-item',{item});
+    make_request('/api/update-item',{item});
+    
 }
 export function searchItem(nm:string){
-    return make_request('/api/search-item',{name:nm});
+    /* 
+        return json.dumps({'code': 200, "item info" :result, 'borrow state':is_borrowing})
+
+    */
+    let response = make_request('/api/search-item',{name:nm});
+
 }
 export function borrowItem(item_id:number,deadline:Date){
-    return make_request('/api/search-item',{
+    /* return {"code":200} */
+    make_request('/api/search-item',{
         iid:item_id,
         // modi:dateToString(modified),
         ddl:dateToString(deadline)
     });
 }
 export function returnItem(share_id:number,item_id:number){
-    return make_request('/api/return-item',{
+    /* 
+    return json.dumps({'code': 200, 'msg': "自己借自己的东西并且成功归还"})
+    return json.dumps({'code': 200, 'msg': "成功按时归还"})
+    return json.dumps({'code': 200, 'msg': "借用超时，成功归还"})
+    */
+    let response = make_request('/api/return-item',{
         sid:share_id,
         iid:item_id
     })
+    window.alert(response['msg'])
+    location.reload()
 }
 export function deleteItem(item_id:number){
-    return make_request('/api/delete-item',{iid:item_id})
+    /* 
+    return json.dumps({'code': 500, 'msg': "非物品拥有者，删除失败"})
+    return json.dumps({'code': 500, 'msg': "物品正在借出，无法删除"})
+    return json.dumps({'code': 200, 'msg': "物品已删除"})
+    */
+    make_request('/api/delete-item',{iid:item_id})
+    location.reload()
+}
+export function deleteUser(){
+    make_request('/api/delete-user',{})
 }

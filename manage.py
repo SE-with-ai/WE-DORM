@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 from function import *
 
-from flask import Flask, g, jsonify, redirect, make_response, request,session as login_session
+from flask import Flask, g, jsonify,render, redirect, make_response, request,session as login_session
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 from flask_sqlalchemy import SQLAlchemy
@@ -63,7 +63,8 @@ def login():
 
         # Ensure username exists and password is correct
         if not visitor :
-            insert_user
+            insert_user(conn,username)
+            visitor = get_data_by_name(conn,username,'USERS')
 
         # Add user to login_session
         login_session["uid"] = visitor.id
@@ -73,7 +74,7 @@ def login():
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
-        return redirect() 
+        return render('login.html') 
 
 
 
@@ -90,10 +91,6 @@ def remove_user():
 
 
 
-
-@error_handler
-def unauthorized():
-    return make_response(jsonify({'error': 'Unauthorized access'}), 401)
 
 
 @app.route('/api/insert-item', methods=['POST'])
@@ -199,7 +196,7 @@ def my_item_list():
             else:
                 borrowing_item.append(0)
         logger.info(f'select data<{my_item}> from databse')
-    return json.dumps({'code': 200, 'My item': my_item, 'is borrowing': borrowing_item})
+    return json.dumps({'code': 200, 'items': my_item, 'borrowing': borrowing_item})
 
 # sid list是sid信息，不展示给用户，但是当用户选择要归还此物品时，需要记录这一物品借出记录的sid并传给return item函数
 # 因为sid才是借用的唯一标识（可能存在同一个人同时借用多个同名物品1
@@ -233,7 +230,7 @@ def my_borrow_list():
         logger.info(f'select data<{result}> from databse')
     return json.dumps({'code': 200, 
                        'msg': "查询成功",
-                       'borrow item list': item_info, 
+                       'borrow_item_list': item_info, 
                        'owner': owner_info, 
                        'borrow start from':start_time, 
                        'ddl': ddl, 
@@ -256,6 +253,8 @@ def update_my_item():
             result = cursor.fetchone()
             logger.info(f'update data<{result}> to the item')
             conn.commit()
+    return {"code":200}
+    
 
 
 
@@ -264,8 +263,6 @@ def update_my_item():
 @login_required
 def search_item():
     """fetch data by item_name
-
-
     Returns:
         物品信息列表，是否正在借出的列表，1代表借出中
     """
@@ -331,6 +328,7 @@ def borrow_item():
                 conn.commit()
     else:
         insert_share(conn, uid, iid, modi, ddl)
+    return {"code":200}
 
 
 @app.route('/api/return-item', methods=['POST'])
@@ -363,11 +361,12 @@ def return_item(uid, iid, time):
             iid = result[2]
             cursor.execute(sql, (sid,))
             logger.info(f'delete data from share by id<{sid}>')
+            owner_id = get_owner_by_iid(conn, iid)[1]
             conn.commit()
-    if uid==owner:
+    if uid==owner_id:
         return json.dumps({'code': 200, 'msg': "自己借自己的东西并且成功归还"})
     item_name = get_item_by_id(conn, iid)[1]
-    user_name = get_user_by_id(conn, owner)[1]
+    user_name = get_user_by_id(conn, owner_id)[1]
     if ddl>time:
         update_virtue(conn, uid, 1)
         log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，准时，功德 +1>'
@@ -381,7 +380,7 @@ def return_item(uid, iid, time):
 
 @app.route('/api/delete-item', methods=['POST'])
 @login_required
-def delete_item(iid):
+def delete_item():
     """
     - 移出物品
         - 条件：拥有者想要自用、借出消耗品
@@ -391,6 +390,7 @@ def delete_item(iid):
     """
     conn = get_db()
     iid = request.form['iid']
+    uid = login_session['uid']
     if not get_owner_by_iid(conn, iid)[1]==uid:
         return json.dumps({'code': 500, 'msg': "非物品拥有者，删除失败"})
 
@@ -409,15 +409,17 @@ def delete_item(iid):
 
 @app.route('/api/delete-user', methods=['POST'])
 @login_required
-def delete_user(uid):
+def delete_user():
     conn = get_db()
+    uid = login_session['uid']
     sql = f"delete from USERS where uid = %s;"
     with conn:
         with conn.cursor() as cursor:
             cursor.execute(sql, (uid,))
             logger.info(f'delete data from databse by id<{uid}>')
             conn.commit()
-    return json.dumps({'code': 200, 'msg': "用户已删除"})
+    del login_session['uid']
+    return redirect('/')
 
 
 
