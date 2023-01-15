@@ -20,7 +20,7 @@ from flask import Flask
 import os, logging, sys, datetime
 from copy import deepcopy
 from flask import Flask, flash, redirect, render_template, request, session as login_session, json
-from flask_session import Session 
+# from flask_session import Session 
 from tempfile import mkdtemp
 # from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 # from werkzeug.security import check_password_hash, generate_password_hash
@@ -31,24 +31,25 @@ from tempfile import mkdtemp
 # Configure application
 app = Flask(__name__)
 # app.config["SECRET_KEY"] = "\x87\xa5\xb1@\xe8\xb2r\x0b\xbb&\xf7\xe9\x84-\x17\xdc\xf8\xfc9l7\xbb\xe9q"
+# app.config["SECRET_KEY"] = b'_5#y2L"F4Q8z\n\xec]/'
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
-app.config["SECRET_KEY"] = b'_5#y2L"F4Q8z\n\xec]/'
+app.debug = True
 # Ensure templates are auto-reloaded
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 # Ensure responses aren't cached
-@app.after_request
-def after_request(response):
-    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-    response.headers["Expires"] = 0
-    response.headers["Pragma"] = "no-cache"
-    return response
+# @app.after_request
+# def after_request(response):
+#     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+#     response.headers["Expires"] = 0
+#     response.headers["Pragma"] = "no-cache"
+#     return response
 
-# Configure session to use filesystem (instead of signed cookies)
-app.config["SESSION_FILE_DIR"] = mkdtemp()
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
+# # Configure session to use filesystem (instead of signed cookies)
+# app.config["SESSION_FILE_DIR"] = mkdtemp()
+# app.config["SESSION_PERMANENT"] = False
+# app.config["SESSION_TYPE"] = "filesystem"
+# Session(app)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -83,7 +84,7 @@ def login():
         if the user exists, then get the data belonged
         else create user and let him log in
     """
-    login_session.clear()
+    # login_session.clear()
     if request.method == "POST":
 
         conn = get_db()
