@@ -1,6 +1,7 @@
 #!/usr/bin/python
 import psycopg2
-conn = psycopg2.connect(database="wedorm", user="myfinal", password="cat_2333", host="192.168.0.105", port="5432") 
+# conn = psycopg2.connect(database="wedorm", user="myfinal", password="cat_2333", host="192.168.0.105", port="5432") 
+conn = psycopg2.connect(database="opengauss", user="root", password="openGauss@123", host="172.30.64.1", port="15000") 
 
 cur = conn.cursor()
 # cur.execute("drop database wedorm;")

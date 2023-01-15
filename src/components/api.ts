@@ -1,8 +1,8 @@
 import axios from "axios";
-import { dateToString, Item, ItemExt, Virlog } from "./utils";
+import { dateToString, Item, ItemOwned, Virlog } from "./utils";
 class http_request {
   method = "POST";
-  baseURL = "https://localhost:15000";
+  baseURL = "https://localhost:15000";// 修改成后端的地址
   url: string;
   data: object;
   constructor(url: string, data: object) {
@@ -57,15 +57,15 @@ export function virlogQuery() {
     return json.dumps({'code': 200, 'virtue log': result}) */
   let response = make_request("/api/virlog", {});
 }
-export function itemsQuery(): ItemExt[] {
+export function itemsQuery(): ItemOwned[] {
   /* 
     return json.dumps({'code': 200, 'My item': my_item, 'is borrowing': borrowing_item})
     */
   // return json.dumps({'code': 200, 'My item': my_item, 'is borrowing': borrowing_item})
   let response = make_request("/api/items", {});
   if (response === undefined) return [];
-  let result: ItemExt[] = [];
-  result = response["My item"] as ItemExt[];
+  let result: ItemOwned[] = [];
+  result = response["My item"] as ItemOwned[];
   for (let res = 0; res < result.length; ++res) {
     result[res]["borrowed"] = response["borrowing"][res];
   }

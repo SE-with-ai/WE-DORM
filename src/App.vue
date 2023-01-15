@@ -2,20 +2,20 @@
 import Holding from './components/Holding.vue'
 import Borrowed from './components/Borrowed.vue'
 import Virtue from './components/Virtue.vue'
+// import {container as WidgetContainerModal} from 'jenesius-vue-modal'
 
 </script>
 
-<template> <!--TODO:root page,with sidebar and page header only-->
-  <el-page-header :icon="ArrowLeft">
-    <template #content>
-      <span class="text-large font-600 mr-3"> 无用物品系统 </span>
-    </template>
-  </el-page-header>
-
+<template class="common-layout"> 
+<!-- <widget-container-modal /> -->
+    <el-container>
+      <el-header><h1>无用物品系统</h1></el-header>
+      <el-main>
   <Holding/>
-
   <Borrowed/>
   <Virtue/>
+    </el-main>
+  </el-container>
 
 </template>
 

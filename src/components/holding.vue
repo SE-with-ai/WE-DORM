@@ -1,5 +1,5 @@
 <template>
-<!-- form to edit -->
+<!-- form to create/edit -->
   <el-form :model="editForm" label-width="120px" :hidden="!showEditor">
 
     <el-form-item label="Item Name">
@@ -14,25 +14,19 @@
     <el-form-item label="Consumable">
       <el-switch v-model="editForm.is_consume" />
     </el-form-item>
-    <el-form-item label="Activity type">
-      <el-checkbox-group v-model="editForm.type">
-        <el-checkbox label="Online activities" name="type" />
-        <el-checkbox label="Promotion activities" name="type" />
-        <el-checkbox label="Offline activities" name="type" />
-        <el-checkbox label="Simple brand exposure" name="type" />
-      </el-checkbox-group>
-    </el-form-item>
+
     <el-form-item>
-      <el-button type="primary" @click="onSubmit">Create</el-button>
-      <el-button>Cancel</el-button>
+      <!--TODO:correct function to call-->
+      <el-button type="primary" @click="handleEditSubmit" :hidden="isCreate">Edit</el-button>
+      <el-button type="primary" @click="handleCreateSubmit" :hidden="!isCreate">Provide</el-button>
+      <el-button @click="showEditor=false">Cancel</el-button>
     </el-form-item>
   </el-form>
 
 
   <!-- tag control buttons -->
   <el-button @click="resetTagFilter">reset date filter</el-button>
-  <el-input v-model="search" placeholder="搜索想借的物品" />
-  
+  <el-button @click="handleCreate">增加无用物品</el-button>
   
   <!-- owned item list -->
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">
@@ -41,14 +35,12 @@
     <el-table-column prop="description" label="Description" width="180" />
     <el-table-column prop="qty" label="Quantity" width="180" />
     <el-table-column prop="is_consume" label="Consumable" width="180" />
-
+    <!--TODO:可以用input简化，改成comma-separated-->
     <el-table-column
       prop="tag"
       label="Tag"
-      width="100"
       :filters="tagsRef"
       :filter-method="filterTag"
-      filter-placement="bottom-end"
     >
       <template #default="scope">
         <el-tag
@@ -75,17 +67,17 @@
 <script setup lang="ts">
 import axios from 'axios'
 import {ref,computed,onMounted, watchEffect} from 'vue'
-import {Item, ItemExt} from './utils'
+import {Item, ItemOwned} from './utils'
 import { ElTable, type TableColumnCtx } from 'element-plus'
 import { deleteItem, itemsQuery, searchItem, updateItem } from './api'
 
 
 
 const tableRef = ref<InstanceType<typeof ElTable>>()
-const tableData= ref<ItemExt[]>([])
+const tableData= ref<ItemOwned[]>([])
 
 
-const filterTag = (value: string[], row: ItemExt) => {
+const filterTag = (value: string[], row: ItemOwned) => {
   
   return value.length === 0 || row.tag.sort().toString() === value.sort().toString()
 }
@@ -99,7 +91,7 @@ const filterHandler = (
   return row[property] === value
 }
 
-const handleDelete = (index: number, row: ItemExt) => {
+const handleDelete = (index: number, row: ItemOwned) => {
   console.log(index, row)
 
   let status = deleteItem(row.iid)
@@ -108,15 +100,13 @@ const handleDelete = (index: number, row: ItemExt) => {
 }
 
 
-const search = ref('')
-const onSearch = ()=>{
-  searchItem(search.value)
-}
+
 onMounted(()=>{
   tableData.value = itemsQuery()
 })
 
 const showEditor = ref(false)
+const isCreate = ref(true)
 const editForm = ref({
       iid: 0,
   name:'',
@@ -127,7 +117,7 @@ const editForm = ref({
   tag:[] as string[],
 })
 
-function handleEdit(index:number,row:ItemExt)
+function handleEdit(index:number,row:ItemOwned)
 {
   showEditor.value = true;
   // load data into form
@@ -141,7 +131,30 @@ function handleEdit(index:number,row:ItemExt)
   if(item.tag)editForm.value.tag = item.tag
 }
 
-const handleEditSubmit = (index: number, row: ItemExt) => {
+const handleEditSubmit = (index: number, row: ItemOwned) => {
+  // 
+    let item= tableData.value[index];
+    let itemTags = {tag:[] as string[]}
+    if(item.tag)delete item['tag']
+    itemTags['tag'] = tableData.value[index]['tag']
+  updateItem([item])
+  console.log(index, row)
+  showEditor.value = false;
+
+}
+function handleCreate(index:number,row:ItemOwned)
+{
+  showEditor.value = true;
+  // load data into form
+  editForm.value.name = ''
+  if(item.brand)editForm.value.brand = ''
+  if(item.description)editForm.value.description = ''
+  editForm.value.qty = ''
+  editForm.value.is_consume = ''
+  if(item.tag)editForm.value.tag = item.tag
+}
+
+const handleCreateSubmit = (index: number, row: ItemOwned) => {
   // 
     let item= tableData.value[index];
     let itemTags = {tag:[] as string[]}

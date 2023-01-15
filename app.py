@@ -12,11 +12,10 @@ from function import *
 
 from flask import Flask, g, jsonify,render, redirect, make_response, request,session as login_session
 from flask_cors import CORS
-from flask_httpauth import HTTPBasicAuth
-from flask_sqlalchemy import SQLAlchemy
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from itsdangerous import BadSignature, SignatureExpired
-from passlib.apps import custom_app_context
+# from flask_httpauth import HTTPBasicAuth
+# from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+# from itsdangerous import BadSignature, SignatureExpired
+# from passlib.apps import custom_app_context
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -26,7 +25,7 @@ app = Flask(__name__)
 # r'/*' 是通配符，让本服务器所有的 URL 都允许跨域请求
 CORS(app, resources=r'/*')
 
-auth = HTTPBasicAuth()
+# auth = HTTPBasicAuth()
 CSRF_ENABLED = True
 app.debug = True
 

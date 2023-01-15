@@ -30,9 +30,14 @@ export interface Tag{
   text:string
   IID: number
 }
-export interface ItemExt extends Item{
+// to show in holding table
+export interface ItemOwned extends Item{
   tag:string[]
 }
+// TODO: item format to show in borrowing table
+export interface ItemToBorrow
+
+
 export interface Virtue{
   uid:number
   virtue:number

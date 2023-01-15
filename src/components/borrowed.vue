@@ -1,29 +1,36 @@
 <template>
-<form action="action_page.php" method="post">
-  <div class="imgcontainer">
-    <img src="img_avatar2.png" alt="Avatar" class="avatar">
-  </div>
 
-  <div class="container">
-    <label for="uname"><b>Username</b></label>
-    <input type="text" placeholder="Enter Username" name="uname" required>
+<!-- 借物品form -->
+  <el-form :model="borrowForm" label-width="120px" :hidden="!showEditor">
 
-    <label for="psw"><b>Password</b></label>
-    <input type="password" placeholder="Enter Password" name="psw" required>
+    <el-form-item label="Item Name">
+      <el-input v-model="borrowForm.name" required="true" from="" disabled/>
+    </el-form-item>
+    <el-form-item label="Brand">
+      <el-input v-model="borrowForm.brand" disabled/>
+    </el-form-item>
+    <el-form-item label="Description">
+      <el-input v-model="borrowForm.description"  disabled/>
+    </el-form-item>
+    <el-form-item label="Description">
+      <el-input v-model="borrowForm.description"  disabled/>
+    </el-form-item>
+    <el-form-item label="Consumable">
+      <el-switch v-model="borrowForm.is_consume"  disabled/>
+    </el-form-item>
+    <el-form-item label="Date">
+      <el-date-picker v-model="value1" type="date" placeholder="Pick a day" :size="size" />
+    </el-form-item>
+    <el-form-item>
 
-    <button type="submit">Login</button>
-    <label>
-      <input type="checkbox" checked="checked" name="remember"> Remember me
-    </label>
-  </div>
+      <el-button type="primary" @click="onBorrowSubmit" >Provide</el-button>
+      <el-button @click="showEditor=false">Cancel</el-button>
+    </el-form-item>
+  </el-form>
 
-  <div class="container" style="background-color:#f1f1f1">
-    <button type="button" class="cancelbtn">Cancel</button>
-    <span class="psw">Forgot <a href="#">password?</a></span>
-  </div>
-</form>
+
   <el-input v-model="search" placeholder="搜索想借的物品" />
-  <el-button @click="onSearch()"/>搜索</el-button>
+  <el-button @click="onSearch()">搜索</el-button>
     
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">
     <el-table-column prop="name" label="Item" width="180" />
@@ -46,17 +53,18 @@
 </template>
 <script setup lang="ts">
 import {ref,computed} from 'vue'
-import {Item, ItemExt} from './utils'
+import {Item, ItemOwned} from './utils'
 import { ElTable, type TableColumnCtx } from 'element-plus'
 import { returnItem, searchItem } from './api'
+// import {modal} from 
 
 
 
 const tableRef = ref<InstanceType<typeof ElTable>>()
-const tableData= ref<ItemExt[]>([])
+const tableData= ref<ItemOwned[]>([])
 
 
-const filterTag = (value: string[], row: ItemExt) => {
+const filterTag = (value: string[], row: ItemOwned) => {
   
   return value.length === 0 || row.tag.sort().toString() === value.sort().toString()
 }
@@ -71,7 +79,7 @@ const filterHandler = (
 }
 
 
-const handleReturn = (index: number, row: ItemExt) => {
+const handleReturn = (index: number, row: ItemOwned) => {
   console.log(index, row)
 
   let status = returnItem(row.sid,row.iid)
@@ -81,11 +89,51 @@ const handleReturn = (index: number, row: ItemExt) => {
 
 
 const search = ref('')
+const suggestions = ref([])
 const onSearch = ()=>{
   searchItem(search.value)
+  // TODO: show suggestion
+}
+const onSelectSuggestion = ()=>{
+  // TODO: turn suggestion into
 }
 
+const borrowForm = ref({
+      iid: 0,// read from item chosen
+  name:'',// read from item chosen
+  brand:'',// read from item chosen
+  description:'',// read from item chosen
+  is_consume:false,// read from item chosen
+  owner:'',// read from item chosen
+  ddl:new Date(),
 
+})
+
+function handleEdit(index:number,row:ItemOwned)
+{
+  showEditor.value = true;
+  // load data into form
+  let item = tableData.value[index]
+  editForm.value.iid = item.iid
+  editForm.value.name = item.name
+  if(item.brand)editForm.value.brand = item.brand
+  if(item.description)editForm.value.description = item.description
+  editForm.value.qty = item.qty
+  editForm.value.is_consume = item.is_consume
+  if(item.tag)editForm.value.tag = item.tag
+}
+
+const handleEditSubmit = (index: number, row: ItemOwned) => {
+  // 
+    let item= tableData.value[index];
+    let itemTags = {tag:[] as string[]}
+    if(item.tag)delete item['tag']
+    itemTags['tag'] = tableData.value[index]['tag']
+  updateItem([item])
+  console.log(index, row)
+  showEditor.value = false;
+
+}
 
 </script>
 
