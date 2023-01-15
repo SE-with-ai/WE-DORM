@@ -50,8 +50,11 @@ export interface ItemToBorrow{
 export interface BorrowSuggestion{
   iid:number 
   item_name:string
+  brand?:string
+  description?:string
   owner_id:number 
-  owner_name:string 
+  owner_name:string /1
+  is_consume:boolean
 }
 
 // export interface Virtue{

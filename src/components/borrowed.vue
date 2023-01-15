@@ -2,7 +2,7 @@
 
 <!-- 借物品form -->
   <el-form :model="borrowForm" label-width="120px" :hidden="!showEditor">
-
+    <el-form-item></el-form-item>
     <el-form-item label="Item Name">
       <el-input v-model="borrowForm.name" required="true" from="" disabled/>
     </el-form-item>
@@ -21,15 +21,26 @@
     </el-form-item>
     <el-form-item>
 
-      <el-button type="primary" @click="onBorrowSubmit" >Provide</el-button>
+      <el-button type="primary" @click="onBorrowSubmit" >开借</el-button>
       <el-button @click="showEditor=false">Cancel</el-button>
     </el-form-item>
   </el-form>
 
 
-  <el-input v-model="search" placeholder="搜索想借的物品" />
-  <el-button @click="onSearch()">搜索</el-button>
-    
+    <el-select
+        v-model="selected"
+        placeholder="搜索想借的物品"
+        :remote-method="onSearch"
+        :loading="loading"
+        @change="handleEdit"
+      >
+        <el-option
+          v-for="item in options"
+          :key="item.iid"
+          :label="item.item_name+'（'+item.owner_name+'）'"
+          :value="item.iid"
+        />
+      </el-select>
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">
     <el-table-column prop="name" label="Item" width="180" />
     <el-table-column prop="owner" label="Name" width="180" />
@@ -50,8 +61,8 @@
   </el-table>
 </template>
 <script setup lang="ts">
-import {ref,computed} from 'vue'
-import {Item, ItemOwned} from './utils'
+import {ref,computed, onMounted} from 'vue'
+import {BorrowSuggestion, Item, ItemOwned} from './utils'
 import { ElTable, type TableColumnCtx } from 'element-plus'
 import { returnItem, searchItem } from './api'
 // import {modal} from 
@@ -86,18 +97,45 @@ const handleReturn = (index: number, row: ItemOwned) => {
 }
 
 
+
+onMounted(() => {
+  option_list.value = states.map((item) => {
+    return { value: `value:${item}`, label: `label:${item}` }
+  })
+})
+
+
+
+const option_list = ref<BorrowSuggestion[]>([])
+const options = ref<BorrowSuggestion[]>([])
+const selected = ref<BorrowSuggestion>([])
+const loading = ref(false)
+
 const search = ref('')
-const suggestions = ref([])
-const onSearch = ()=>{
-  searchItem(search.value)
+const showSuggestions = ref(false)
+const onSearch = (query: string)=>{
+  if (query) {
+    loading.value = true
+    setTimeout(() => {
+      searchItem(query).then((res)=>{
+        
+        options.value = []
+        })
+      loading.value = false
+    }, 200)
+  } else {
+    options.value = []
+  }
+  searchItem(search.value).then((res)=>{
+    suggestions.value = res
+  })
+  showSuggestions.value = true
   // TODO: show suggestion
 }
-const onSelectSuggestion = ()=>{
-  // TODO: turn suggestion into
-}
 
+const showEditor = ref(false)
 const borrowForm = ref({
-      iid: 0,// read from item chosen
+  iid: 0,// read from item chosen
   name:'',// read from item chosen
   brand:'',// read from item chosen
   description:'',// read from item chosen
@@ -106,22 +144,26 @@ const borrowForm = ref({
   ddl:new Date(),
 
 })
+  // const onSelectSuggestion = ()=>{
+  //   // TODO: fill borrowForm using suggestion
+  
+  // }
 const disabledDate = (time: Date) => {
   return time.getTime() < Date.now()
 }
 
-function handleEdit(index:number,row:ItemOwned)
+function onSelectSuggestion()
 {
-  showEditor.value = true;
   // load data into form
-  let item = tableData.value[index]
-  editForm.value.iid = item.iid
-  editForm.value.name = item.name
-  if(item.brand)editForm.value.brand = item.brand
-  if(item.description)editForm.value.description = item.description
-  editForm.value.qty = item.qty
-  editForm.value.is_consume = item.is_consume
-  if(item.tag)editForm.value.tag = item.tag
+  let item = selected.value
+  borrowForm.value.iid = item.iid
+  borrowForm.value.name = item.name
+  if(item.brand)borrowForm.value.brand = item.brand
+  if(item.description)borrowForm.value.description = item.description
+  borrowForm.value.qty = item.qty
+  borrowForm.value.is_consume = item.is_consume
+  if(item.tag)borrowForm.value.tag = item.tag
+  showEditor.value = true;
 }
 
 const handleEditSubmit = (index: number, row: ItemOwned) => {
