@@ -13,7 +13,7 @@
     </el-col>
   </el-row>
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">
-    <el-table-column prop="text" label="Log" width="180" />
+    <el-table-column prop="text" label="Log" width="100%" />
   </el-table>
 
 </template>
@@ -21,48 +21,20 @@
 
 
 import axios from 'axios'
-import {ref,computed,onMounted} from 'vue'
-import {Item, ItemOwned, Virlog} from './utils'
-import { ElTable, type TableColumnCtx } from 'element-plus'
-import { deleteItem, itemsQuery, searchItem } from './api'
+import {ref,computed,onMounted, onBeforeMount} from 'vue'
+import {ItemOwned} from './utils'
+import { ElTable } from 'element-plus'
+import { virlogQuery,virtueQuery} from './api'
+import { beforeMain } from '@popperjs/core'
 
 
 
 const virtueRef = ref()
 const tableRef = ref<InstanceType<typeof ElTable>>()
-const tableData= ref<Virlog[]>([])
-
-
-const filterTag = (value: string[], row: ItemOwned) => {
-  
-  return value.length === 0 || row.tag.sort().toString() === value.sort().toString()
-}
-const tagsRef = ref<string[]>([])
-const filterHandler = (
-  value: string,
-  row: Item,
-  column: TableColumnCtx<Item>
-) => {
-  const property = column['property']
-  return row[property] === value
-}
-
-
-const handleDelete = (index: number, row: ItemOwned) => {
-  console.log(index, row)
-
-  let status = deleteItem(row.iid)
-  console.log(status)
-  location.reload()
-}
-
-
-const search = ref('')
-const onSearch = ()=>{
-  searchItem(search.value)
-}
-onMounted(()=>{
-  tableData.value = itemsQuery()
+const tableData= ref<string[]>([])
+onBeforeMount(()=>{
+  virtueQuery().then((res)=>{virtueRef.value = res})
+  virlogQuery().then((res)=>{tableData.value = res as string[]})
 })
 
 

@@ -10,6 +10,8 @@ from functools import wraps
 logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+
+
 def login_required(f):
     """
     Decorate routes to require login.
@@ -172,6 +174,23 @@ def get_owner_by_iid(conn, id: int):
             logger.info(f'select data<{result}> from own')
     return result
 
+def get_tag_by_id(conn, id: int):
+    """fetch data by id
+
+    Args:
+        conn ([type]): the connection object
+        id (int): the primary key of the table
+
+    Returns:
+        [type]: the tuple data of the table
+    """
+    sql = f"select NAME from TAGS where iid = %s;"
+    with conn:
+        with conn.cursor() as cursor:
+            cursor.execute(sql, (id,))
+            result = cursor.fetchall()
+            logger.info(f'select data<{result}> from tags')
+    return result
 def get_user_by_id(conn, id: int):
     """fetch data by id
 

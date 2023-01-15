@@ -115,20 +115,11 @@ def login():
 
 
 
-@app.route('/api/user/remove', methods=['POST'])
-@login_required
-def remove_user():
-    remove_id = request.form.get('id', type=int)
-    if remove_id:
-        remove_info = JoinInfos.query.get_or_404(remove_id)
-        db.session.delete(remove_info)
-        return jsonify({'code': 200, 'msg': "删除成功"})
-    else:
-        return jsonify({'code': 500, 'msg': "未知错误"})
+
 
 @app.route('/api/insert-item', methods=['POST'])
 @login_required
-def provide_item(arg, uid):
+def insert_item(arg, uid):
     """
     提供物品
         - 接口: add
@@ -141,23 +132,23 @@ def provide_item(arg, uid):
     conn = get_db()
     iid = insert_item(conn, arg)
     if not iid:
-        return json.dumps({'code': 500, 'msg': "添加物品失败"})
+        return {'code': 500, 'msg': "添加物品失败"}
     # sid = insert_share(conn, uid, modi, ddl)
     oid = insert_own(conn, uid, iid)
     if not oid:
-        return json.dumps({'code': 500, 'msg': "添加拥有关系失败"})
+        return {'code': 500, 'msg': "添加拥有关系失败"}
     data = json.loads(arg)
     label = data['name']
     if get_data_by_name(conn, label, 'TAGS'):
         flag = insert_tag(conn, label, iid)
         if flag:
-            return json.dumps({'code': 200, 'msg': "添加成功，已有标签"})
-        return json.dumps({'code': 500, 'msg': "新建标签失败"})
+            return {'code': 200, 'msg': "添加成功，已有标签"}
+        return {'code': 500, 'msg': "新建标签失败"}
     else:
         flag = insert_tag(conn, label, iid)
         if flag:
-            return json.dumps({'code': 200, 'msg': "添加成功，新增标签"})
-        return json.dumps({'code': 500, 'msg': "新建标签失败"})
+            return {'code': 200, 'msg': "添加成功，新增标签"}
+        return {'code': 500, 'msg': "新建标签失败"}
     
 
 @app.route('/api/virtue-query', methods=['POST'])
@@ -177,7 +168,7 @@ def virtue_query():
             cursor.execute(sql, (uid,))
             result = cursor.fetchone()
             logger.info(f'select data<{result}> from databse')
-    return json.dumps({'code': 200, 'virtue': result[1]})
+    return result[1]
 
 @app.route('/api/virlog', methods=['POST'])
 @login_required
@@ -196,7 +187,7 @@ def virlog_query():
             cursor.execute(sql, (uid,))
             result = cursor.fetchall()
             logger.info(f'select data<{result}> from virlog')
-    return json.dumps({'code': 200, 'virtue log': result})
+    return [tp[1] for tp in result]
 # - 查询物品
 #   - 正在借用
 #   - 所拥有
@@ -221,7 +212,6 @@ def my_item_list():
     sql = f"select * from OWN where uid = %s;"
     uid = request.form.get('uid')
     my_item = []
-    borrowing_item = [] # 一串0和1， 1代表对应物品正在借出
     with conn.cursor() as cursor:
         cursor.execute(sql, (uid,))
         result = cursor.fetchall()
@@ -229,52 +219,59 @@ def my_item_list():
         for row in result:
             iid = row[2]
             item_info = get_item_by_id(conn, iid)
-            my_item.append(item_info)
+
+            tags = get_tag_by_id(conn, item_info[1])
+            if tags: item_info['tag']= tags
+            borrowing = False
             if get_sharing_by_item_id(conn, iid):
-                borrowing_item.append(1)
-            else:
-                borrowing_item.append(0)
+                borrowing=True
+            item = {
+                'iid':iid,
+                'name':item_info[1],
+                'brand':item_info[2],
+                'description':item_info[3],
+                'qty':item_info[4],
+                'is_consume':item_info[5],
+                'borrowing':borrowing,
+                'tag':tags,
+            }
+            my_item.append(item)
         logger.info(f'select data<{my_item}> from databse')
-    return json.dumps({'code': 200, 'items': my_item, 'borrowing': borrowing_item})
+    return my_item
 
 # sid list是sid信息，不展示给用户，但是当用户选择要归还此物品时，需要记录这一物品借出记录的sid并传给return item函数
 # 因为sid才是借用的唯一标识（可能存在同一个人同时借用多个同名物品1
 @app.route('/api/borrow-list', methods=['POST'])
 @login_required
 def my_borrow_list():
-    """查询我正在借的物品"""
+    """查询我正在借用的物品"""
     conn = get_db()
     sql = f"select * from SHARE where uid = %s;"
     uid = login_session['uid']
-    sid_list = []
     item_info = []
-    owner_info = []
-    start_time = []
-    ddl = []
-    time_remain = []
     with conn.cursor() as cursor:
         cursor.execute(sql, (uid,))
         result = cursor.fetchall()
-        for row in result:
+        for row in result: # 
             iid = row[2]
             owner_raw = get_sharing_by_item_id(conn, iid)
             owner_id = owner_raw[1]
             share_id = owner_raw[0]
-            sid_list.append(share_id)
-            owner_info.append(get_user_by_id(conn, owner_id))
-            item_info.append(get_item_by_id(conn, iid))
-            start_time.append((row[3]).isoformat())
-            ddl.append((row[4]).isoformat)
-            time_remain.append(((row[4] - row[3])).isoformat())
+
+            # sid_list.append(share_id)
+            owner_info = get_user_by_id(conn, owner_id)
+            item = get_item_by_id(conn, iid)
+            item_info.append({
+                'sid':share_id,
+                'iid':iid,
+                'name':item[1],
+                'owner_uid':owner_id,
+                'owner_name':owner_info[1],
+                'modified':row[4].isoformat(),
+                'ddl':row[3].isoformat()
+            })
         logger.info(f'select data<{result}> from databse')
-    return json.dumps({'code': 200, 
-                       'msg': "查询成功",
-                       'borrow_item_list': item_info, 
-                       'owner': owner_info, 
-                       'borrow start from':start_time, 
-                       'ddl': ddl, 
-                       'time remain':time_remain, 
-                       'sid list':sid_list})
+    return item_info
 
 @app.route('/api/update-item', methods=['POST'])
 @login_required
@@ -303,21 +300,25 @@ def search_item():
         物品信息列表，是否正在借出的列表，1代表借出中
     """
     conn = get_db()
-    sql = f"select * from ITEMS where NAME = %s;"
+    sql = f"select * from ITEMS where NAME LIKE %%%s%%;"
     item_name: str = request.form.get['name']
     item_info = []
-    is_borrowing = []
     with conn.cursor() as cursor:
         cursor.execute(sql, (item_name,))
         result = cursor.fetchall()
         for row in result:
-            item_info.append(row)
-            if get_sharing_by_item_id(conn,row[0]):
-                is_borrowing.append(1)
-            else:
-                is_borrowing.append(0)
+            owner = get_owner_by_iid(conn,row[0])
+            owner_name = get_user_by_id(conn,owner[1])[1]
+            if not get_sharing_by_item_id(conn,row[0]):
+                pass
+                item_info.append({
+                    'iid':row[0],
+                    'name':row[1],
+                    'owner_id':owner[1],
+                    'owner_name':owner_name,
+                })
         logger.info(f'select data<{result}> from item')
-    return json.dumps({'code': 200, "item info" :result, 'borrow state':is_borrowing})
+    return result
 
 # 借流程：首先搜索物品，在返回的列表中选择是要借哪一个，把被选中的物品的id传入下面的borrow函数
 # borrow函数没有判断是否可借，因为搜索的时候已经返回了可借列表
@@ -354,7 +355,7 @@ def borrow_item():
     if is_consume: #消耗品
         # if qty-1==0:
         #     delete_item(conn, iid, uid)
-        #     return json.dumps({'code': 200, 'msg': "全部借出，物品已删除"}) #这一部分改为借出至剩余0个时由owner来自行决定是补货update还是删除delete
+        #     return {'code': 200, 'msg': "全部借出，物品已删除"}) #这一部分改为借出至剩余0个时由owner来自行决定是补货update还是删除delete
         sql = f"update ITEMS QTY=%s where iid=%s;"
         with conn:
             with conn.cursor() as cursor:
@@ -400,18 +401,18 @@ def return_item(uid, iid, time):
             owner_id = get_owner_by_iid(conn, iid)[1]
             conn.commit()
     if uid==owner_id:
-        return json.dumps({'code': 200, 'msg': "自己借自己的东西并且成功归还"})
+        return {'code': 200, 'msg': "自己借自己的东西并且成功归还"})
     item_name = get_item_by_id(conn, iid)[1]
     user_name = get_user_by_id(conn, owner_id)[1]
     if ddl>time:
         update_virtue(conn, uid, 1)
         log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，准时，功德 +1>'
         insert_virlog(conn, uid, log_content)
-        return json.dumps({'code': 200, 'msg': "成功按时归还"})
+        return {'code': 200, 'msg': "成功按时归还"})
     update_virtue(conn, uid, -2)
     log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，超时，功德 -2>'
     insert_virlog(conn, uid, log_content)
-    return json.dumps({'code': 200, 'msg': "借用超时，成功归还"})
+    return {'code': 200, 'msg': "借用超时，成功归还"})
 
 
 @app.route('/api/delete-item', methods=['POST'])
@@ -428,12 +429,12 @@ def delete_item():
     iid = request.form['iid']
     uid = login_session['uid']
     if not get_owner_by_iid(conn, iid)[1]==uid:
-        return json.dumps({'code': 500, 'msg': "非物品拥有者，删除失败"})
+        return {'code': 500, 'msg': "非物品拥有者，删除失败"})
 
     sql1 = f"delete from ITEMS where iid = %s;"
     sql2 = f"delete from TAGS where iid = %s;"
     if get_sharing_by_item_id(conn, iid):
-        return json.dumps({'code': 500, 'msg': "物品正在借出，无法删除"})
+        return {'code': 500, 'msg': "物品正在借出，无法删除"})
     with conn:
         with conn.cursor() as cursor:
             cursor.execute(sql1, (iid,))
@@ -441,7 +442,7 @@ def delete_item():
             cursor.execute(sql2, (iid,))
             logger.info(f'delete data from tags by id<{iid}>')
             conn.commit()
-    return json.dumps({'code': 200, 'msg': "物品已删除"})
+    return {'msg': "物品已删除"}
 
 @app.route('/api/delete-user', methods=['POST'])
 @login_required
@@ -457,6 +458,10 @@ def delete_user():
     del login_session['uid']
     return redirect('/')
 
+@app.errorhandler(404)
+def not_found(_):
+    resp = make_response(render_template('error.html'), 404)
+    return resp
 
 
 # print(search_item(conn, "厕所"))

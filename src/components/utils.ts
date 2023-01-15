@@ -11,39 +11,53 @@ export interface Item {
   description?:string
   qty:number
   is_consume:boolean
+  
 }
 
-export interface ShareRelation{
-  sid:number
-  uid:number
-  iid:number 
-  modified:Date
-  ddl:Date
-
-}
-export interface OwnRelation{
-  oid:number
-  uid:number
-  iid:number
-}
-export interface Tag{
-  text:string
-  IID: number
-}
+// interface ShareRelation{
+//   sid:number
+//   uid:number
+//   iid:number 
+//   modified:Date
+//   ddl:Date
+  
+// }
+// interface OwnRelation{
+//   oid:number
+//   uid:number
+//   iid:number
+// }
+// interface Tag{
+//   text:string
+//   IID: number
+// }
 // to show in holding table
 export interface ItemOwned extends Item{
+  borrowing:boolean
   tag:string[]
 }
 // TODO: item format to show in borrowing table
 export interface ItemToBorrow{
-  iid
+  sid:number
+  iid: number
+  name:string
+  owner_uid:number 
+  owner_name:string
+  modified:Date
+  ddl:Date
 }
 
-
-export interface Virtue{
-  uid:number
-  virtue:number
+export interface BorrowSuggestion{
+  iid:number 
+  item_name:string
+  owner_id:number 
+  owner_name:string 
 }
+
+// export interface Virtue{
+//   uid:number
+//   virtue:number
+// }
 export interface Virlog{
   uid:number 
   virlog:string

@@ -69,8 +69,8 @@ const filterTag = (value: string[], row: ItemOwned) => {
 const tagsRef = ref<string[]>([])
 const filterHandler = (
   value: string,
-  row: Item,
-  column: TableColumnCtx<Item>
+  row: ItemOwned,
+  column: TableColumnCtx<ItemOwned>
 ) => {
   const property = column['property']
   return row[property] === value
