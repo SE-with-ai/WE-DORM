@@ -45,10 +45,11 @@ export function virtueQuery() {
     return json.dumps({'code': 200, 'virtue': result[1]})
 
 */
+  // TODO: structuring
   let response = make_request("/api/virtue-query", {}) as object;
   response = response["virtue"][1];
   if (typeof response === typeof "") {
-    response = [];
+    response = []
   }
   return response;
 }
@@ -65,9 +66,9 @@ export function itemsQuery(): ItemOwned[] {
   let response = make_request("/api/items", {});
   if (response === undefined) return [];
   let result: ItemOwned[] = [];
-  result = response["My item"] as ItemOwned[];
+  result = response["My item"] as Item[]; // TODO: structuring
   for (let res = 0; res < result.length; ++res) {
-    result[res]["borrowed"] = response["borrowing"][res];
+    (result[res] as Item)["borrowed"] = response["borrowing"][res];
   }
   return result;
 }
@@ -82,6 +83,9 @@ export function borrowListQuery() {
                        'time remain':time_remain, 
                        'sid list':sid_list})
     */
+  // start time: YYYY-MM-DD
+  // time remain: days
+  
   make_request("/api/borrow-list", {});
 }
 export function updateItem(item: Item) {
@@ -92,7 +96,6 @@ export function updateItem(item: Item) {
 export function searchItem(nm: string) {
   /* 
         return json.dumps({'code': 200, "item info" :result, 'borrow state':is_borrowing})
-
     */
    // TODO: structuring response into 
   let response = make_request("/api/search-item", { name: nm });

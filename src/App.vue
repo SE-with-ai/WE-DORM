@@ -9,7 +9,7 @@ import Virtue from './components/Virtue.vue'
 <template class="common-layout"> 
 <!-- <widget-container-modal /> -->
     <el-container>
-      <el-header><h1>无用物品系统</h1></el-header>
+      <el-header><h1>WEDORM</h1></el-header>
       <el-main>
   <Holding/>
   <Borrowed/>

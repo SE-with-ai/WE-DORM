@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 from function import *
 
-from flask import Flask, g, jsonify,render, redirect, make_response, request,session as login_session
+from flask import Flask, g, jsonify,render_template, redirect, make_response, request,session as login_session
 from flask_cors import CORS
 # from flask_httpauth import HTTPBasicAuth
 # from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
@@ -39,9 +39,12 @@ def get_db():
         g.db_conn = create_conn()
     return g.db_conn
 
+@app.route('/',methods=['GET'])
+@login_required
+def main():
+    return render_template('index.html')
 
 @app.route('/login', methods=['GET','POST'])
-@login_required
 def login():
     """
     POST:
@@ -73,7 +76,7 @@ def login():
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
-        return render('login.html') 
+        return render_template('login.html') 
 
 
 
@@ -225,9 +228,9 @@ def my_borrow_list():
             sid_list.append(share_id)
             owner_info.append(get_user_by_id(conn, owner_id))
             item_info.append(get_item_by_id(conn, iid))
-            start_time.append(str(row[3]))
-            ddl.append(str(row[4]))
-            time_remain.append(str(row[4] - row[3]))
+            start_time.append((row[3]).isoformat())
+            ddl.append((row[4]).isoformat)
+            time_remain.append(((row[4] - row[3])).isoformat())
         logger.info(f'select data<{result}> from databse')
     return json.dumps({'code': 200, 
                        'msg': "查询成功",

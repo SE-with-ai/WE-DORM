@@ -25,8 +25,8 @@
 
 
   <!-- tag control buttons -->
-  <el-button @click="resetTagFilter">reset date filter</el-button>
-  <el-button @click="handleCreate">增加无用物品</el-button>
+  <!-- <el-button @click="resetTagFilter">reset date filter</el-button> -->
+  <el-button @click="handleCreate">增加物品</el-button>
   
   <!-- owned item list -->
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">

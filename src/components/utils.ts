@@ -35,7 +35,9 @@ export interface ItemOwned extends Item{
   tag:string[]
 }
 // TODO: item format to show in borrowing table
-export interface ItemToBorrow
+export interface ItemToBorrow{
+  iid
+}
 
 
 export interface Virtue{

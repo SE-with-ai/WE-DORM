@@ -12,14 +12,12 @@
     <el-form-item label="Description">
       <el-input v-model="borrowForm.description"  disabled/>
     </el-form-item>
-    <el-form-item label="Description">
-      <el-input v-model="borrowForm.description"  disabled/>
-    </el-form-item>
     <el-form-item label="Consumable">
       <el-switch v-model="borrowForm.is_consume"  disabled/>
     </el-form-item>
     <el-form-item label="Date">
-      <el-date-picker v-model="value1" type="date" placeholder="Pick a day" :size="size" />
+      <el-date-picker v-model="borrowForm.ddl" type="date" placeholder="Pick a day" 
+        :disabled-date="disabledDate" />
     </el-form-item>
     <el-form-item>
 
@@ -108,6 +106,9 @@ const borrowForm = ref({
   ddl:new Date(),
 
 })
+const disabledDate = (time: Date) => {
+  return time.getTime() < Date.now()
+}
 
 function handleEdit(index:number,row:ItemOwned)
 {
