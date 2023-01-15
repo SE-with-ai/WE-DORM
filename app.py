@@ -88,10 +88,6 @@ def remove_user():
     else:
         return jsonify({'code': 500, 'msg': "未知错误"})
 
-
-
-
-
 @app.route('/api/insert-item', methods=['POST'])
 @login_required
 def provide_item(arg, uid):
@@ -259,9 +255,6 @@ def update_my_item():
             logger.info(f'update data<{result}> to the item')
             conn.commit()
     return {"code":200}
-    
-
-
 
 
 @app.route('/api/search-item', methods=['POST'])
