@@ -1,6 +1,7 @@
 import json
 from datetime import date, datetime
-
+from functools import wraps
+from flask import session,redirect
 import psycopg2 
 import logging
             
@@ -30,7 +31,7 @@ def create_conn():
     conn = psycopg2.connect(database="wedorm", 
                             user="myfinal", 
                             password="cat_2333", 
-                            host="192.168.0.105", 
+                            host="192.168.0.107", 
                             port="5432") 
     return conn
 
