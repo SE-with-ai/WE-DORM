@@ -1,0 +1,27 @@
+# Disk DescriptorFile
+version=1
+encoding="GBK"
+CID=7a1b0b7c
+parentCID=ffffffff
+createType="twoGbMaxExtentSparse"
+
+# Extent description
+RW 8323072 SPARSE "CentOS 7 64 λ-s001.vmdk"
+RW 8323072 SPARSE "CentOS 7 64 λ-s002.vmdk"
+RW 8323072 SPARSE "CentOS 7 64 λ-s003.vmdk"
+RW 8323072 SPARSE "CentOS 7 64 λ-s004.vmdk"
+RW 8323072 SPARSE "CentOS 7 64 λ-s005.vmdk"
+RW 327680 SPARSE "CentOS 7 64 λ-s006.vmdk"
+
+# The Disk Data Base 
+#DDB
+
+ddb.adapterType = "lsilogic"
+ddb.geometry.cylinders = "2610"
+ddb.geometry.heads = "255"
+ddb.geometry.sectors = "63"
+ddb.longContentID = "ef3100556cdabc6d419b82397a1b0b7c"
+ddb.toolsInstallType = "4"
+ddb.toolsVersion = "11269"
+ddb.uuid = "60 00 C2 91 60 00 fd be-2e c5 5f 6e a0 23 5d 76"
+ddb.virtualHWVersion = "19"

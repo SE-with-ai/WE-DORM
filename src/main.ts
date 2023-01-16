@@ -12,10 +12,10 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 const router = createRouter({
     history: createWebHistory(),
     routes: [
-      { path: '/', component: Holding },
-      { path: '/login', component: Login },
-      { path: '/virtue', component: Virtue },
-      { path: '/borrow', component: Borrowed },
+      { path: '/', component: Holding,meta: {requiresAuth: true} },
+      { path: '/login', component: Login,meta: {requiresAuth: true}  },
+      { path: '/virtue', component: Virtue,meta: {requiresAuth: true}  },
+      { path: '/borrow', component: Borrowed,meta: {requiresAuth: true}  },
     ],
   })
 router.beforeEach((to, from, next) => {
@@ -54,7 +54,7 @@ if (to.matched.some(record => record.meta.requiresAuth) && (!token || token === 
   }
 })
 
-const app = createApp(App).use(ElementPlus).use(router).mount('#app')
+createApp(App).use(ElementPlus).use(router).mount('#app')
 // for ([name, comp] of Object.entries(ElementPlusIconsVue)) {
 //   app.component(name, comp);
 // }
