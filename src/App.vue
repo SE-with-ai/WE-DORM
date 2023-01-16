@@ -5,15 +5,10 @@
       <el-header>
         <h1>WEDORM</h1>
         <!--TODO:use vue-router to go open login page-->
-        <el-dropdown-menu  trigger="click">
-          <span class="el-dropdown-link"><el-icon class="el-icon--right"><arrow-down /></el-icon>
-          </span>
-          <template #dropdown>
-            <el-dropdown-item @click="deleteUserConfirm=!deleteUserConfirm">删除账号</el-dropdown-item>
-          <el-dropdown-item @click="trick=!trick" :hidden="!deleteUserConfirm">确定？</el-dropdown-item>
-          <el-dropdown-item :hidden="!trick">不让你删</el-dropdown-item>
-          </template>
-        </el-dropdown-menu>
+        
+            <el-button @click="deleteUserConfirm=!deleteUserConfirm">删除账号</el-button>
+          <el-button @click="trick=!trick" :hidden="!deleteUserConfirm">确定？</el-button>
+          <el-button :hidden="!trick">不让你删</el-button>
       </el-header>
       <el-main>
         <router-view/>
