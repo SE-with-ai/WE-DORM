@@ -8,7 +8,7 @@ import Holding from './components/Holding.vue'
 import Login from './components/Login.vue'
 import Virtue from './components/Virtue.vue'
 import Borrowed from './components/Borrowed.vue'
-
+import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 const router = createRouter({
     history: createWebHistory(),
     routes: [
@@ -19,7 +19,7 @@ const router = createRouter({
     ],
   })
 router.beforeEach((to, from, next) => {
-const token = window.localStorage.getItem('madblog-token')
+const token = window.localStorage.getItem('WEDORM-uid') // TODO: valid own identifier
 
 if (to.matched.some(record => record.meta.requiresAuth) && (!token || token === null)) 
 {
@@ -54,4 +54,7 @@ if (to.matched.some(record => record.meta.requiresAuth) && (!token || token === 
   }
 })
 
-createApp(App).use(ElementPlus).use(router).mount('#app')
+const app = createApp(App).use(ElementPlus).use(router).mount('#app')
+// for ([name, comp] of Object.entries(ElementPlusIconsVue)) {
+//   app.component(name, comp);
+// }

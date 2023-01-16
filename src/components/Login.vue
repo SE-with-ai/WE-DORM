@@ -14,6 +14,7 @@
 <script setup lang="ts">
 
 import {ref} from 'vue'
+import { loginFunc } from './api';
 
 const loginForm = ref({
     username:''

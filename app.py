@@ -127,7 +127,7 @@ def login():
     # Redirect user to home page
     # return redirect("/")
     # return None
-    return "OK",200
+    return visitor.id,200
 
     # User reached route via GET (as by clicking a link or via redirect)
     # else:
