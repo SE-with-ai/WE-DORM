@@ -12,7 +12,11 @@ class http_request {
 }
 async function make_request(url: string, data: object) {
   let req = new http_request(url, data);
-  let response = await axios(req)
+  let response = await axios(req).catch((error)=>{
+    if(error.response){
+      console.log(error.response)
+    }
+  })
   return response;
 }
 
