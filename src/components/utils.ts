@@ -53,7 +53,7 @@ export interface BorrowSuggestion{
   brand?:string
   description?:string
   owner_id:number 
-  owner_name:string /1
+  owner_name:string 
   is_consume:boolean
 }
 
