@@ -28,8 +28,15 @@ from tempfile import mkdtemp
 
 # from helpers import apology, login_required
 
+ class CustomFlask(Flask):
+     jinja_options = Flask.jinja_options.copy()
+     jinja_options.update(dict(
+         variable_start_string='%%',  # Default is '{{', I'm changing this because Vue.js uses '{{' / '}}'
+         variable_end_string='%%',
+     ))
+
 # Configure application
-app = Flask(__name__)
+app = CustomFlask(__name__,template_folder='.')
 # app.config["SECRET_KEY"] = "\x87\xa5\xb1@\xe8\xb2r\x0b\xbb&\xf7\xe9\x84-\x17\xdc\xf8\xfc9l7\xbb\xe9q"
 # app.config["SECRET_KEY"] = b'_5#y2L"F4Q8z\n\xec]/'
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
@@ -72,60 +79,59 @@ def get_db():
         g.db_conn = create_conn()
     return g.db_conn
 
-def apology(message, code=400):
-    """Render message as an apology to user."""
-    def escape(s):
-        """
-        Escape special characters.
+# def apology(message, code=400):
+#     """Render message as an apology to user."""
+#     def escape(s):
+#         """
+#         Escape special characters.
 
-        https://github.com/jacebrowning/memegen#special-characters
-        """
-        for old, new in [("-", "--"), (" ", "-"), ("_", "__"), ("?", "~q"),
-                         ("%", "~p"), ("#", "~h"), ("/", "~s"), ("\"", "''")]:
-            s = s.replace(old, new)
-        return s
-    return render_template("error.html", top=code, bottom=escape(message)), code
+#         https://github.com/jacebrowning/memegen#special-characters
+#         """
+#         for old, new in [("-", "--"), (" ", "-"), ("_", "__"), ("?", "~q"),
+#                          ("%", "~p"), ("#", "~h"), ("/", "~s"), ("\"", "''")]:
+#             s = s.replace(old, new)
+#         return s
+#     return render_template("error.html", top=code, bottom=escape(message)), code
 
-@app.route('/',methods=['GET'])
-@login_required
-def main():
-    return render_template('index.html')
+# @app.route('/',methods=['GET'])
+# @login_required
+# def main():
+#     return render_template('index.html')
 
-@app.route('/login', methods=['GET','POST'])
+@app.route('/login', methods=['POST'])
 def login():
     """
     POST:
         if the user exists, then get the data belonged
         else create user and let him log in
     """
-    # login_session.clear()
-    if request.method == "POST":
 
-        conn = get_db()
-        # Ensure username was submitted
-        if not request.form.get("username"):
-            return apology("Must provide username", 403)
-        username = request.form.get("username")
-        # Query database for username
+    conn = get_db()
+    # Ensure username was submitted
+    if not request.form.get("username"):
+        return "Must provide username", 403
+    username = request.form.get("username")
+    # Query database for username
+    visitor = get_data_by_name(conn,username,'USERS')
+
+    # print(visitor, visitor.id, visitor.hash, file=sys.stderr)
+
+    # Ensure username exists and password is correct
+    if not visitor :
+        insert_user(conn,username)
         visitor = get_data_by_name(conn,username,'USERS')
 
-        # print(visitor, visitor.id, visitor.hash, file=sys.stderr)
+    # Add user to login_session
+    login_session["uid"] = visitor.id
 
-        # Ensure username exists and password is correct
-        if not visitor :
-            insert_user(conn,username)
-            visitor = get_data_by_name(conn,username,'USERS')
-
-        # Add user to login_session
-        login_session["uid"] = visitor.id
-
-        # Redirect user to home page
-        return redirect("/")
-        # return None
+    # Redirect user to home page
+    # return redirect("/")
+    # return None
+    return "OK",200
 
     # User reached route via GET (as by clicking a link or via redirect)
-    else:
-        return render_template('login.html') 
+    # else:
+    #     return render_template('login.html') 
 
 
 
@@ -472,10 +478,10 @@ def delete_user():
     del login_session['uid']
     return redirect('/')
 
-@app.errorhandler(404)
-def not_found(_):
-    resp = make_response(render_template('error.html'), 404)
-    return resp
+# @app.errorhandler(404)
+# def not_found(_):
+#     resp = make_response(render_template('error.html'), 404)
+#     return resp
 
 
 # print(search_item(conn, "厕所"))

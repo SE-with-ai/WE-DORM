@@ -25,12 +25,14 @@ export async function insert_item(item: Item[]) {
     return json.dumps({'code': 500, 'msg': "新建标签失败"})
     return json.dumps({'code': 200, 'msg': "添加成功，新增标签"})
     */
-  let response = await make_request("/api/insert-item", { item });
-  if(response === undefined)window.alert('响应超时')
-  else{
-    if (response['code'] !== 200) window.alert(response["msg"] as string);
-    location.reload()
-  }
+
+  let response = false
+  await  make_request("/api/insert-item", { item }).then(
+    (res)=>{window.alert(res );response=true;},
+    (res)=>{window.alert(res );}
+  
+  );
+  return response
 }
 
 export async function virtueQuery() {
@@ -38,61 +40,55 @@ export async function virtueQuery() {
     return json.dumps({'code': 200, 'virtue': result[1]})
 
 */
-  let response:number =  await make_request("/api/virtue-query", {});
-  if(response === undefined)response = 0;
+  let response = 0;
+  await make_request("/api/virtue-query", {}).then((res)=>{response = res});
   return response
 }
 export async function virlogQuery() {
   /* 
     return json.dumps({'code': 200, 'virtue log': result}) */
-  let response = await make_request("/api/virlog", {});
-  if (typeof response === typeof "") {
-    response = []
-  }
+  let response =[] as string[];
+  await make_request("/api/virlog", {}).then((res)=>{response = res});
   return response
 }
 export async function itemsQuery(){
   /* 
     return json.dumps({'code': 200, 'My item': my_item, 'is borrowing': borrowing_item})
     */
-  // return json.dumps({'code': 200, 'My item': my_item, 'is borrowing': borrowing_item})
-  let response = await make_request("/api/items", {});
-  if (response === undefined) return [];
-  return response;
+    let response =[] as ItemOwned[];
+  await make_request("/api/items", {}).then((res)=>{response = res});
+  return response
 }
 export async function borrowListQuery() {
 
-  let response = make_request("/api/borrow-list", {})
-  if (response === undefined) return [];
-  return response as ItemToBorrow[]
+    let response =[] as ItemToBorrow[];
+  await make_request("/api/borrow-list", {}).then((res)=>{response = res});
+  return response
 }
 export async function updateItem(item: Item) {
   /*     return {"code":200}
    */
-  let response = await make_request("/api/update-item", item);
-  if(response === undefined)window.alert('响应超时')
-  else{
-    if (response['code'] !== 200) window.alert(response["msg"] as string);
-    location.reload()
-  }
+  let response = false
+  await  make_request("/api/update-item", item).then((res)=>{window.alert(res );response=true;});
+  return response
 }
 export async function searchItem(nm: string) {
 
-  return await make_request("/api/search-item", { name: nm }) as BorrowSuggestion[]
+  let response = []as BorrowSuggestion[];
+  await make_request("/api/search-item", { name: nm }).then((res)=>{response = res})
+  return response
   
 }
 export async function borrowItem(item_id: number, deadline: Date) {
   /* return {"code":200} */
-  let response = await make_request("/api/search-item", {
+  
+  let response = false
+  await  make_request("/api/search-item", {
     iid: item_id,
     // modi:dateToString(modified),
     ddl: dateToString(deadline),
-  });
-  if(response === undefined)window.alert('响应超时')
-  else{
-    if (response['code'] !== 200) window.alert(response["msg"] as string);
-    location.reload()
-  }
+  }).then((res)=>{window.alert(res );response=true;});
+  return response
 }
 export async function returnItem(share_id: number, item_id: number) {
   /* 
@@ -100,15 +96,13 @@ export async function returnItem(share_id: number, item_id: number) {
     return json.dumps({'code': 200, 'msg': "成功按时归还"})
     return json.dumps({'code': 200, 'msg': "借用超时，成功归还"})
     */
-  let response = await make_request("/api/return-item", {
+  let response = false
+  await  make_request("/api/return-item", {
     sid: share_id,
     iid: item_id,
-  });
-  if(response === undefined)window.alert('响应超时')
-  else{
-    if (response['code'] !== 200) window.alert(response["msg"] as string);
-    location.reload()
-  }
+  }).then((res)=>{window.alert(res );response=true;});
+  return response
+
 }
 export async function deleteItem(item_id: number) {
   /* 
@@ -116,10 +110,22 @@ export async function deleteItem(item_id: number) {
     return json.dumps({'code': 500, 'msg': "物品正在借出，无法删除"})
     return json.dumps({'code': 200, 'msg': "物品已删除"})
     */
-  let response = await make_request("/api/delete-item", { iid: item_id });
-  if (response['code'] !== 200) window.alert(response["msg"] as string);
-  location.reload()
+  let response = false
+  await make_request("/api/delete-item", { iid: item_id }).then(
+    (res)=>{window.alert(res );response=true;},
+    (res)=>{window.alert(res);}
+  )
+  return response
+
+  // TODO: in caller, deleteItem().then(load data)
 }
 export async function deleteUser() {
   make_request("/api/delete-user", {});
+}
+
+export async function loginFunc(name:string){
+  let response=  false;
+  await make_request("/login",{username:name}).then((res)=>{response = true;})
+  return response
+  
 }

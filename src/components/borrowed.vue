@@ -64,7 +64,7 @@
 import {ref,computed, onMounted} from 'vue'
 import {BorrowSuggestion, Item, ItemOwned,ItemToBorrow} from './utils'
 import { ElTable, type TableColumnCtx } from 'element-plus'
-import { returnItem, searchItem } from './api'
+import { returnItem, searchItem,borrowItem,borrowListQuery } from './api'
 // import {modal} from 
 
 
@@ -91,14 +91,20 @@ const filterHandler = (
 const handleReturn = async (index: number, row: ItemToBorrow) => {
   console.log(index, row)
 
-  await returnItem(row.sid,row.iid)
+  await returnItem(row.sid,row.iid).then(
+        ()=>{
+      tableData.value = borrowListQuery()
+        }
+  )
 }
 
 
 
+onMounted(()=>{
+  tableData.value = borrowListQuery()
+})
 
 
-const option_list = ref<BorrowSuggestion[]>([])
 const options = ref<BorrowSuggestion[]>([])
 const selected = ref<BorrowSuggestion>([])
 const loading = ref(false)
@@ -111,7 +117,8 @@ const onSearch = (query: string)=>{
     setTimeout(() => {
       searchItem(query).then((res)=>{
         
-        options.value = []
+        options.value = res
+
         })
       loading.value = false
     }, 200)
@@ -119,10 +126,9 @@ const onSearch = (query: string)=>{
     options.value = []
   }
   searchItem(search.value).then((res)=>{
-    suggestions.value = res
+    option.value = res
   })
   showSuggestions.value = true
-  // TODO: show suggestion
 }
 
 const showEditor = ref(false)
@@ -155,13 +161,15 @@ function onSelectSuggestion()
   showEditor.value = true;
 }
 
-const handleEditSubmit = (index: number, row: ItemOwned) => {
+const onBorrowSubmit = (index: number, row: ItemOwned) => {
   // 
     let item= tableData.value[index];
     let itemTags = {tag:[] as string[]}
     if(item.tag)delete item['tag']
     itemTags['tag'] = tableData.value[index]['tag']
-  updateItem([item])
+  borrowItem([item]).then(()=>{
+  tableData.value = borrowListQuery()
+  })
   console.log(index, row)
   showEditor.value = false;
 
