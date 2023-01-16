@@ -401,18 +401,18 @@ def return_item(uid, iid, time):
             owner_id = get_owner_by_iid(conn, iid)[1]
             conn.commit()
     if uid==owner_id:
-        return {'code': 200, 'msg': "自己借自己的东西并且成功归还"})
+        return {'code': 200, 'msg': "自己借自己的东西并且成功归还"}
     item_name = get_item_by_id(conn, iid)[1]
     user_name = get_user_by_id(conn, owner_id)[1]
     if ddl>time:
         update_virtue(conn, uid, 1)
         log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，准时，功德 +1>'
         insert_virlog(conn, uid, log_content)
-        return {'code': 200, 'msg': "成功按时归还"})
+        return ({'code': 200, 'msg': "成功按时归还"})
     update_virtue(conn, uid, -2)
     log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，超时，功德 -2>'
     insert_virlog(conn, uid, log_content)
-    return {'code': 200, 'msg': "借用超时，成功归还"})
+    return {'code': 200, 'msg': "借用超时，成功归还"}
 
 
 @app.route('/api/delete-item', methods=['POST'])
@@ -429,12 +429,12 @@ def delete_item():
     iid = request.form['iid']
     uid = login_session['uid']
     if not get_owner_by_iid(conn, iid)[1]==uid:
-        return {'code': 500, 'msg': "非物品拥有者，删除失败"})
+        return {'code': 500, 'msg': "非物品拥有者，删除失败"}
 
     sql1 = f"delete from ITEMS where iid = %s;"
     sql2 = f"delete from TAGS where iid = %s;"
     if get_sharing_by_item_id(conn, iid):
-        return {'code': 500, 'msg': "物品正在借出，无法删除"})
+        return {'code': 500, 'msg': "物品正在借出，无法删除"}
     with conn:
         with conn.cursor() as cursor:
             cursor.execute(sql1, (iid,))
