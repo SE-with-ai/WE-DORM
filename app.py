@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# @Date    : 2018-01-30 20:53:54
-# @Author  : Bayi
-# @Link    : https://blog.flywinky.top/
-
 import os
 import re
 import json
@@ -106,12 +100,13 @@ def login():
         else create user and let him log in
     """
 
-    conn = get_db()
     # Ensure username was submitted
     if not request.form.get("username"):
         return "Must provide username", 403
     username = request.form.get("username")
+    print(request.form)
     # Query database for username
+    conn = get_db()
     visitor = get_data_by_name(conn,username,'USERS')
 
     # print(visitor, visitor.id, visitor.hash, file=sys.stderr)
@@ -125,8 +120,6 @@ def login():
     login_session["uid"] = visitor.id
 
     # Redirect user to home page
-    # return redirect("/")
-    # return None
     return visitor.id,200
 
     # User reached route via GET (as by clicking a link or via redirect)

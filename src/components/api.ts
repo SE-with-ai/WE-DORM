@@ -2,7 +2,7 @@ import axios from "axios";
 import { dateToString, Item, ItemOwned, ItemToBorrow, BorrowSuggestion } from "./utils";
 class http_request {
   method = "POST";
-  baseURL = "https://localhost:15000";// 修改成后端的地址
+  baseURL = "http://127.0.0.1:5000";// 修改成后端的地址
   url: string;
   data: object;
   constructor(url: string, data: object) {
@@ -12,7 +12,12 @@ class http_request {
 }
 async function make_request(url: string, data: object) {
   let req = new http_request(url, data);
-  let response = await axios(req).catch((error)=>{
+  let response = await axios({
+    method:req.method,
+    baseURL:req.baseURL,
+    url:req.url,
+    data:req.data,
+  }).catch((error)=>{
     if(error.response){
       console.log(error.response)
     }
