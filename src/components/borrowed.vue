@@ -101,7 +101,8 @@ const handleReturn = async (index: number, row: ItemToBorrow) => {
 
 
 onMounted(()=>{
-  tableData.value = borrowListQuery()
+  borrowListQuery().then((res)=>{tableData.value = res;})
+  
 })
 
 
