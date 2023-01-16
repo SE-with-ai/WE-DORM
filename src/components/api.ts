@@ -126,6 +126,6 @@ export async function deleteUser() {
 export async function loginFunc(name:string){
   let response=  '';
   await make_request("/login",{username:name}).then((res)=>{response = true;})
-  window.localStorage['WEDORM-uid'] = response
+  window.sessionStorage['WEDORM-uid'] = response
   
 }

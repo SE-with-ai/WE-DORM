@@ -21,7 +21,7 @@ const router = createRouter({
     ],
   })
 router.beforeEach((to, from, next) => {
-const token = window.localStorage.getItem('WEDORM-uid') // TODO: valid own identifier
+const token = window.sessionStorage.getItem('WEDORM-uid') // TODO: valid own identifier
 
 if (
   to.matched.some(record => record.meta.requiresAuth) && 
