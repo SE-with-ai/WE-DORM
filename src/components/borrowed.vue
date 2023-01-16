@@ -32,7 +32,7 @@
         placeholder="搜索想借的物品"
         :remote-method="onSearch"
         :loading="loading"
-        @change="handleEdit"
+        @change="onSelectSuggestion"
       >
         <el-option
           v-for="item in options"
@@ -62,7 +62,7 @@
 </template>
 <script setup lang="ts">
 import {ref,computed, onMounted} from 'vue'
-import {BorrowSuggestion, Item, ItemOwned} from './utils'
+import {BorrowSuggestion, Item, ItemOwned,ItemToBorrow} from './utils'
 import { ElTable, type TableColumnCtx } from 'element-plus'
 import { returnItem, searchItem } from './api'
 // import {modal} from 
@@ -80,7 +80,7 @@ const filterTag = (value: string[], row: ItemOwned) => {
 const tagsRef = ref<string[]>([])
 const filterHandler = (
   value: string,
-  row: ItemOwned,
+  row: ItemToBorrow,
   column: TableColumnCtx<ItemOwned>
 ) => {
   const property = column['property']
@@ -88,21 +88,13 @@ const filterHandler = (
 }
 
 
-const handleReturn = (index: number, row: ItemOwned) => {
+const handleReturn = async (index: number, row: ItemToBorrow) => {
   console.log(index, row)
 
-  let status = returnItem(row.sid,row.iid)
-  console.log(status)
-  if(typeof status !== typeof {} )window.alert(status?.get('msg'))
+  await returnItem(row.sid,row.iid)
 }
 
 
-
-onMounted(() => {
-  option_list.value = states.map((item) => {
-    return { value: `value:${item}`, label: `label:${item}` }
-  })
-})
 
 
 
@@ -144,10 +136,7 @@ const borrowForm = ref({
   ddl:new Date(),
 
 })
-  // const onSelectSuggestion = ()=>{
-  //   // TODO: fill borrowForm using suggestion
-  
-  // }
+
 const disabledDate = (time: Date) => {
   return time.getTime() < Date.now()
 }
