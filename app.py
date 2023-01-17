@@ -112,6 +112,7 @@ def login():
     data = json.loads(list(request.form)[0],strict=False)
     username = data.get("username")
     print(username)
+    username = 'ANDY'
     if IS_FRONTEND_DEBUG:
         login_session['username'] = username
         return AppResponse(username,200)
@@ -127,7 +128,8 @@ def login():
     print('login: visitor is',visitor)
     assert(len(visitor)>0)
     login_session["username"] = visitor[0][1]
-
+    print('login_session["uid"]:',login_session["uid"])
+    print('visitor:',visitor)
     # Add user to login_session
 
     # Redirect user to home page
