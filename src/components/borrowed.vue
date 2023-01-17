@@ -58,6 +58,7 @@ import {ref,computed, onMounted,watchEffect} from 'vue'
 import {BorrowSuggestion, Item, ItemOwned,ItemToBorrow} from './utils'
 import { ElTable, type TableColumnCtx } from 'element-plus'
 import { returnItem, searchItem,borrowItem,borrowListQuery } from './api'
+import { toNumber } from 'lodash';
 // import {modal} from 
 
 
@@ -83,6 +84,7 @@ onMounted(()=>{
 const query_string = ref('')
 const options = ref<BorrowSuggestion[]>([])
 const selected = ref<BorrowSuggestion>({
+  value:'',
   iid:0 ,
   item_name:'',
   brand:'',
@@ -93,16 +95,38 @@ const selected = ref<BorrowSuggestion>({
 })
 let timeout=2000
 watchEffect(async () => {
-  const response = await searchItem(query_string.value)
-  options.value = await response
+  // const response = await searchItem(query_string.value)
+  // await searchItem(query_string.value).then((res)=>{options.value=res})
+
+  // options.value = await response
 })
 const onSearch = (query: string, cb: (arg: any) => void)=>{
-    const results = query
+  searchItem(query_string.value).then((res)=>{
+  console.log('search',query_string,res)
+  options.value = [];
+  for (let ress in res)
+  {
+    options.value.push({
+      value: ress[1]+'('+ress[5]+')',
+      "iid": toNumber(ress[0]),
+  "item_name":ress[1],
+  "brand":ress[2],
+  "description":ress[3],
+  "owner_id": toNumber(ress[4]),
+  "owner_name":ress[5], 
+  "is_consume":ress[6] as boolean,
+  
+    })
+  }
+
+  })
+    const results = query_string.value
     ? options.value
     : []
 
   clearTimeout(timeout)
   timeout = setTimeout(() => {
+    console.log('results:',results,query)
     cb(results)
   }, 3000 * Math.random())
 
@@ -110,6 +134,7 @@ const onSearch = (query: string, cb: (arg: any) => void)=>{
 
 const showEditor = ref(false)
 const borrowForm = ref({
+  value:'',
   iid: 0,// read from item chosen
   name:'',// read from item chosen
   brand:'',// read from item chosen
@@ -120,6 +145,7 @@ const borrowForm = ref({
 
 })
 const defaultForm = {
+  value:'',
   iid: 0,// read from item chosen
   name:'',// read from item chosen
   brand:'',// read from item chosen
