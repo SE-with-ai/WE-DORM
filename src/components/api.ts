@@ -21,9 +21,10 @@ async function make_request(url: string, data) {
     }],
   }).catch((error)=>{
     if(error.response){
-      console.log(error.response)
+      console.log('response error',error.response)
     }
   }).then((res)=>(res.data))
+  console.log(response)
   return response;
 }
 

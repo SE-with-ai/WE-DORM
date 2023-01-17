@@ -111,8 +111,6 @@ def login():
     """
 
     # Ensure username was submitted
-    print(list(request.form)[0])
-    print(json.loads(list(request.form)[0],strict=False))
     data = json.loads(list(request.form)[0],strict=False)
     if not data.get("username"):
         return AppResponse("Must provide username", 403)
@@ -153,10 +151,9 @@ def insertItem():
             - tag由最后一次query得到的物品的tag分析（split by comma）统计成set，保存成变量
             - 返回：HTTP状态
     """
-    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+    if IS_FRONTEND_DEBUG: 
         return AppResponse("添加成功",200)
     conn = get_db()
-    # TODO: parse from request.form
     request_data = json.loads(list(request.form)[0],strict=False)
     data = json.loads(request_data['item'])
     iid = insert_item(conn, data,commit=False)
@@ -199,7 +196,7 @@ def virtueQuery():
     """
     uid = login_session['uid']
 
-    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+    if IS_FRONTEND_DEBUG: 
         return AppResponse(114514,200)
 
     conn = get_db()
@@ -222,7 +219,7 @@ def virlogQuery():
             - POST
             - 返回： HTTP状态、功德日志
     """
-    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+    if IS_FRONTEND_DEBUG: 
         return AppResponse(['this','is','a','test'],200)
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
@@ -254,7 +251,7 @@ def virlogQuery():
 @app.route('/api/items', methods=['POST','OPTIONS'])
 def myItemList():
     """查询我提供的和正在借出的物品"""
-    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+    if IS_FRONTEND_DEBUG: 
         print(AppResponse([{
                 'iid':1,
                 'name':'test item',
@@ -280,7 +277,7 @@ def myItemList():
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from OWN where uid = %s;"
-    uid = request.form.get('uid')
+    uid = login_session['uid']
     my_item = []
     with conn.cursor() as cursor:
         cursor.execute(sql, (uid,))
@@ -306,6 +303,7 @@ def myItemList():
                 'tag':tags,
             }
             my_item.append(item)
+
         logger.info(f'select data<{my_item}> from databse')
     return AppResponse(my_item,200)
 
@@ -315,7 +313,7 @@ def myItemList():
 @app.route('/api/borrow-list', methods=['POST'])
 def myBorrowList():
     """查询我正在借用的物品"""
-    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+    if IS_FRONTEND_DEBUG: 
         return AppResponse([{
                 'sid':1,
                 'iid':1,
@@ -362,7 +360,7 @@ def updateMyItem():
     在不改变name的情况下更新物品信息，要求输入所有信息的更新。
     原信息用get_data_by_name函数获得，用户在原基础上修改后，把包括iid的全部表项传入此函数
     """
-    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+    if IS_FRONTEND_DEBUG: 
         return AppResponse("OK",200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
@@ -384,7 +382,7 @@ def searchItem():
     Returns:
         物品信息列表，是否正在借出的列表，1代表借出中
     """
-    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+    if IS_FRONTEND_DEBUG: 
         return AppResponse([{
                     'iid':1,
                     'name':'row[1]',
@@ -394,7 +392,7 @@ def searchItem():
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from ITEMS where NAME LIKE %%%s%%;"
-    item_name: str = request.form.get['name']
+    item_name: str = request_data['name']
     item_info = []
     with conn.cursor() as cursor:
         cursor.execute(sql, (item_name,))
@@ -482,7 +480,7 @@ def returnItem():
     - param: 对象userid，物品id，数量
     - 返回：HTTP状态
     """
-    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+    if IS_FRONTEND_DEBUG: 
         return AppResponse("OK",200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
@@ -530,7 +528,7 @@ def deleteItem():
             - param：物品id，数量
             - 返回：HTTP状态
     """
-    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+    if IS_FRONTEND_DEBUG: 
         return AppResponse("OK",200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
