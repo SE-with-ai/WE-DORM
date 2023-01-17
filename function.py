@@ -119,6 +119,7 @@ def insert_tag(conn, cid, iid,commit=True) -> int:
         with conn.cursor() as cursor:
             result = cursor.execute(sql, (cid, iid))
             result = cursor.fetchone()
+            print(result)
             logger.info(f'add data<{result}> to the databse')
             if commit: conn.commit()
     return result if result else None
@@ -268,5 +269,7 @@ def update_virtue(conn, uid, num,commit=True):
             logger.info(f'update data<{result}> to the virtue')
             conn.commit()
 
-
-
+# if __name__ == '__main__':
+#     conn = create_conn()
+#     print(insert_tag(conn,'药','2',True))
+#     print(get_user_by_id(conn, 1))
