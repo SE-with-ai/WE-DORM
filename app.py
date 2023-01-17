@@ -127,9 +127,11 @@ def login():
     if not visitor :
         insert_user(conn,username)
         visitor = get_data_by_name(conn,username,'USERS')
+    print(visitor)
+    assert(len(visitor)>0)
+    login_session["uid"] = visitor[1]
 
     # Add user to login_session
-    login_session["uid"] = visitor[1]
 
     # Redirect user to home page
     return username,200

@@ -101,3 +101,7 @@ node_modules
 # vscode settings
 .vscode
 package-lock.json
+*.env
+debug_models.py
+*.db
+*.db-journal

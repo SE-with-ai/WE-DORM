@@ -32,7 +32,23 @@ export interface Item {
 //   IID: number
 // }
 // to show in holding table
-export interface ItemOwned extends Item{
+
+export interface ItemInserted {
+  name:string
+  brand?:string
+  description?:string
+  qty:number
+  is_consume:boolean
+  tags:string[]
+}
+
+export interface ItemOwned{
+  iid: number
+  name:string
+  brand?:string
+  description?:string
+  qty:number
+  is_consume:boolean
   borrowing:boolean
   tag:string[]
 }

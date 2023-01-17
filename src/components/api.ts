@@ -1,5 +1,5 @@
 import axios from "axios";
-import { dateToString, Item, ItemOwned, ItemToBorrow, BorrowSuggestion } from "./utils";
+import { dateToString, ItemInserted, ItemOwned, ItemToBorrow, BorrowSuggestion } from "./utils";
 class http_request {
   method = "POST";
   baseURL = "http://127.0.0.1:5000";// 修改成后端的地址
@@ -37,7 +37,7 @@ async function make_request(url: string, data) {
 }
 
 
-export async function insert_item(item: Item[]) {
+export async function insert_item(item: ItemInserted[]) {
   /* 
     return json.dumps({'code': 500, 'msg': "添加物品失败"})
     return json.dumps({'code': 500, 'msg': "添加拥有关系失败"})
@@ -47,10 +47,9 @@ export async function insert_item(item: Item[]) {
     */
 
   let response = false
-  await  make_request("/api/insert-item", { item }).then(
+  await  make_request("/api/insert-item", { item:JSON.stringify(item) }).then(
     (res)=>{window.alert(res );response=true;},
     (res)=>{window.alert(res );}
-  
   );
   return response
 }
@@ -85,7 +84,7 @@ export async function borrowListQuery() {
   await make_request("/api/borrow-list", {}).then((res)=>{response = res});
   return response
 }
-export async function updateItem(item: Item) {
+export async function updateItem(item: ItemOwned) {
   /*     return {"code":200}
    */
   let response = false

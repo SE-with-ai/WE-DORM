@@ -146,11 +146,13 @@ function handleCreate(index:number,row:ItemOwned)
 {
   showEditor.value = true;
   // load data into form
+  
+    let item= tableData.value[index];
   editForm.value.name = ''
   if(item.brand)editForm.value.brand = ''
   if(item.description)editForm.value.description = ''
-  editForm.value.qty = ''
-  editForm.value.is_consume = ''
+  editForm.value.qty = 0
+  editForm.value.is_consume = false
   if(item.tag)editForm.value.tag = item.tag
 }
 
@@ -160,7 +162,7 @@ const handleCreateSubmit = (index: number, row: ItemOwned) => {
     let itemTags = {tag:[] as string[]}
     if(item.tag)delete item['tag']
     itemTags['tag'] = tableData.value[index]['tag']
-  updateItem([item])
+  updateItem(item)
   console.log(index, row)
   showEditor.value = false;
 
