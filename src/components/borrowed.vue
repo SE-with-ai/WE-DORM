@@ -1,7 +1,7 @@
 <template>
 
 <!-- 借物品form -->
-  <el-form :model="borrowForm" :hidden="!showEditor">
+  <el-form :model="borrowForm" :if="showEditor">
     <el-form-item></el-form-item>
     <el-form-item label="Item Name">
       <el-input v-model="borrowForm.name" required="true" from="" disabled/>
@@ -91,10 +91,6 @@ const selected = ref<BorrowSuggestion>({
   owner_name:'' ,
   is_consume:false,
 })
-const loading = ref(false)
-
-const search = ref('')
-const showSuggestions = ref(false)
 let timeout=2000
 watchEffect(async () => {
   const response = await searchItem(query_string.value)
@@ -110,9 +106,6 @@ const onSearch = (query: string, cb: (arg: any) => void)=>{
     cb(results)
   }, 3000 * Math.random())
 
-
-
-  showSuggestions.value = true
 }
 
 const showEditor = ref(false)
@@ -170,11 +163,7 @@ const onBorrowSubmit = () => {
   background-color: white;
 }
 
-/* Inline #3 | http://127.0.0.1:5173/borrow */
 
-.el-form-item {
-  /* margin: 20% 0% auto auto; */
-}
 
 /* Inline #4 | http://127.0.0.1:5173/borrow */
 

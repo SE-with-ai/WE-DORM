@@ -35,7 +35,7 @@ import { useRouter } from 'vue-router'
   const deleteUserConfirm = ref(false)
   const trick = ref(false)
   const loggedin = ref(false) 
-  // computed(()=>{window.sessionStorage.getItem('WEDORM-uid') !== undefined;})
+  // computed(()=>{window.localStorage.getItem('WEDORM-uid') !== undefined;})
 </script>
 <style scoped>
 

@@ -33,7 +33,7 @@ async function make_request(url: string, data) {
       if(error.response.status === 401){
         console.error('login',error)
         window.alert('auth error ',error.response)
-        window.sessionStorage.removeItem('WEDORM-uid')
+        window.localStorage.removeItem('WEDORM-uid')
       router.push('/')
       }
     }
@@ -56,9 +56,8 @@ export async function insertItem(item: ItemInserted) {
     return json.dumps({'code': 200, 'msg': "添加成功，新增标签"})
     */
 
-  let response = false
   await  make_request("/api/insert-item", { item:JSON.stringify(item) }).then(
-    (res)=>{window.alert(res );response=true;},
+    (res)=>{window.alert(res );},
     (res)=>{window.alert(res );}
   );
   window.location.reload()
@@ -157,7 +156,7 @@ export async function deleteItem(item_id: number) {
 }
 export async function deleteUser() {
   make_request("/api/delete-user", {});
-  window.sessionStorage.removeItem('WEDORM-uid')
+  window.localStorage.removeItem('WEDORM-uid')
 }
 
 export async function loginFunc(name:string){
@@ -168,7 +167,7 @@ export async function loginFunc(name:string){
   if (response !== '')
   {
     console.log('login:',response)
-    window.sessionStorage.setItem('WEDORM-uid' ,response)
+    window.localStorage.setItem('WEDORM-uid' ,response)
     // window.alert('pause success')
   }
   else 
