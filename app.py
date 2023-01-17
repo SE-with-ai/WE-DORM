@@ -35,11 +35,7 @@ app.config["SECRET_KEY"] = "\x87\xa5\xb1@\xe8\xb2r\x0b\xbb&\xf7\xe9\x84-\x17\xdc
 app.debug = True
 
 
-if IS_FRONTEND_DEBUG: # DEBUG
-    from flask_sqlalchemy import SQLAlchemy
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///items.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-    db = SQLAlchemy(app)
+
 
 
 # Ensure responses aren't cached
@@ -60,7 +56,7 @@ Session(app)
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 # r'/*' 是通配符，让本服务器所有的 URL 都允许跨域请求
-CORS(app, resources=r'/*')
+# CORS(app, resources=r'/*')
 
 # auth = HTTPBasicAuth()
 app.debug = True
@@ -122,16 +118,16 @@ def login():
         return username,200
     # Query database for username
     conn = get_db()
-    visitor = get_data_by_name(conn,username,'USERS')[0]
+    visitor = get_data_by_name(conn,username,'USERS')
 
 
     # Ensure username exists and password is correct
     if not visitor :
         insert_user(conn,username)
-        visitor = get_data_by_name(conn,username,'USERS')[0]
+        visitor = get_data_by_name(conn,username,'USERS')
     print(visitor)
     assert(len(visitor)>0)
-    login_session["uid"] = visitor[1]
+    login_session["uid"] = visitor[0][1]
 
     # Add user to login_session
 
