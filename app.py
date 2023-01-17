@@ -122,7 +122,7 @@ def login():
 
     # Ensure username exists and password is correct
     if not visitor :
-        insert_user(conn,data)
+        insert_user(conn,data['username'])
         visitor = get_data_by_name(conn,username,'USERS')
     print('login: visitor is',visitor)
     assert(len(visitor)>0)
