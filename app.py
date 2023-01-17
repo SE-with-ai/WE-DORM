@@ -5,7 +5,7 @@ from datetime import datetime
 from function import *
 
 from flask import Flask, g, jsonify,render_template, redirect, make_response, request,session as login_session
-from flask_cors import CORS
+from flask_cors import CORS,cross_origin
 # from flask_httpauth import HTTPBasicAuth
 # from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 # from itsdangerous import BadSignature, SignatureExpired
@@ -56,7 +56,7 @@ Session(app)
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 # r'/*' 是通配符，让本服务器所有的 URL 都允许跨域请求
-# CORS(app, resources=r'/*')
+CORS(app, resources=r'/*')
 
 # auth = HTTPBasicAuth()
 app.debug = True
@@ -251,6 +251,7 @@ def virlogQuery():
 #       - 查询物品返回的状态是字符串，可以是“拥有n1个，已借出n2个”，“借用n个，还剩[还可使用时间]“
 
 @app.route('/api/items', methods=['POST'])
+@cross_origin(allow_headers=['Content-Type'])
 @login_required
 def myItemList():
     """查询我提供的和正在借出的物品"""

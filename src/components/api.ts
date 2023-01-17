@@ -6,7 +6,7 @@ async function make_request(url: string, data) {
     method:"POST",
     baseURL:"http://127.0.0.1:5000",
     url:url,
-    headers:{"Access-Control-Allow-Origin":"*"},
+    // headers:{"Access-Control-Allow-Origin":"*"},
     data:JSON.stringify(data),
     transformRequest: [function (data, headers) {
       // Do whatever you want to transform the data
