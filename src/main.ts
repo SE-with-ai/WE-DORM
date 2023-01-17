@@ -16,7 +16,7 @@ const router = createRouter({
       ,meta: {requiresAuth: true} 
     },
       { path: '/login', component: Login  },
-      { path: '/virtue', component: Virtue},
+      { path: '/virtue', component: Virtue,meta: {requiresAuth: true} },
       { path: '/borrow', component: Borrowed,meta: {requiresAuth: true}  },
     ],
   })

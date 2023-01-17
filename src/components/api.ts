@@ -1,7 +1,10 @@
 import axios from "axios";
+import { useRouter } from "vue-router";
 import { dateToString, ItemInserted, ItemOwned, ItemToBorrow, BorrowSuggestion } from "./utils";
 
+
 async function make_request(url: string, data) {
+  const router = useRouter();
   let response = await axios({
     method:"POST",
     baseURL:"http://127.0.0.1:5000",
@@ -11,7 +14,6 @@ async function make_request(url: string, data) {
     transformRequest: [function (data, headers) {
       // Do whatever you want to transform the data
       console.log('request',data)
-  
       return data;
     }],
     transformResponse: [function (data) {
@@ -22,6 +24,10 @@ async function make_request(url: string, data) {
   }).catch((error)=>{
     if(error.response){
       console.log('response error',error.response)
+    }
+    if(error.response.status === 401){
+      window.sessionStorage.removeItem('WEDORM-uid')
+      router.push('/login')
     }
   }).then((res)=>(res.data))
   console.log(response)
@@ -139,6 +145,7 @@ export async function deleteItem(item_id: number) {
 }
 export async function deleteUser() {
   make_request("/api/delete-user", {});
+  window.sessionStorage.removeItem('WEDORM-uid')
 }
 
 export async function loginFunc(name:string){

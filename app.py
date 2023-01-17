@@ -151,13 +151,15 @@ def insertItem():
             - tag由最后一次query得到的物品的tag分析（split by comma）统计成set，保存成变量
             - 返回：HTTP状态
     """
+    uid = login_session.get('uid')
+    if not uid:
+        return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("添加成功",200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
     data = json.loads(request_data['item'])
     iid = insert_item(conn, data,commit=False)
-    uid = login_session['uid']
     if not iid:
         conn.rollback()
         return AppResponse("添加物品失败",500)
@@ -194,7 +196,9 @@ def virtueQuery():
             - POST
             - 返回： HTTP状态、功德值
     """
-    uid = login_session['uid']
+    uid = login_session.get('uid')
+    if not uid:
+        return AppResponse('请先登录',401)
 
     if IS_FRONTEND_DEBUG: 
         return AppResponse(114514,200)
@@ -219,12 +223,14 @@ def virlogQuery():
             - POST
             - 返回： HTTP状态、功德日志
     """
+    uid = login_session.get('uid')
+    if not uid:
+        return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse(['this','is','a','test'],200)
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from VIRLOG where uid = %s;"
-    uid = login_session['uid']
     with conn:
         with conn.cursor() as cursor:
             cursor.execute(sql, (uid,))
@@ -274,10 +280,12 @@ def myItemList():
             }],200)
 
 
+    uid = login_session.get('uid')
+    if not uid:
+        return AppResponse('请先登录',401)
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from OWN where uid = %s;"
-    uid = login_session['uid']
     my_item = []
     with conn.cursor() as cursor:
         cursor.execute(sql, (uid,))
@@ -324,10 +332,12 @@ def myBorrowList():
                 'ddl':date.today().isoformat()
             }],200)
 
+    uid = login_session.get('uid')
+    if not uid:
+        return AppResponse('请先登录',401)
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from SHARE where uid = %s;"
-    uid = login_session['uid']
     item_info = []
     with conn.cursor() as cursor:
         cursor.execute(sql, (uid,))
@@ -391,11 +401,11 @@ def searchItem():
                 }],200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
-    sql = f"select * from ITEMS where NAME LIKE %%%s%%;"
+    sql = f"select * from ITEMS where NAME LIKE %s;"
     item_name: str = request_data['name']
     item_info = []
     with conn.cursor() as cursor:
-        cursor.execute(sql, (item_name,))
+        cursor.execute(sql, ('\%'+item_name+'\%',))
         result = cursor.fetchall()
         for row in result:
             owner = get_owner_by_iid(conn,row[0])
@@ -428,9 +438,12 @@ def borrowItem():
         - 参数: userid
         - 返回：HTTP状态
     """
+    uid = login_session.get('uid')
+    if not uid:
+        return AppResponse('请先登录',401)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
-    uid, iid = login_session['uid'],request_data['iid']
+     iid = request_data['iid']
     ddl_list = request_data['ddl'].split('-')
     modi, ddl = datetime.now(),datetime.datetime(ddl_list[0],ddl_list[1],ddl_list[2])
     data = get_item_by_id(conn, iid)
@@ -480,13 +493,15 @@ def returnItem():
     - param: 对象userid，物品id，数量
     - 返回：HTTP状态
     """
+    uid = login_session.get('uid')
+    if not uid:
+        return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("OK",200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
     sid, iid = request_data['sid'],request_data['iid']
     time = datetime.now()
-    uid = login_session['uid']
     sqlget = f"select * from SHARE where sid = %s;"
     sql = f"delete from SHARE where sid = %s;"
     with conn:
@@ -528,12 +543,14 @@ def deleteItem():
             - param：物品id，数量
             - 返回：HTTP状态
     """
+    uid = login_session.get('uid')
+    if not uid:
+        return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("OK",200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
     iid = request_data['iid']
-    uid = login_session['uid']
     if not get_owner_by_iid(conn, iid)[1]==uid:
         conn.rollback()
         return AppResponse("非物品拥有者，删除失败",500)
@@ -555,15 +572,17 @@ def deleteItem():
 # @login_required
 @app.route('/api/delete-user', methods=['POST'])
 def deleteUser():
+    uid = login_session.get('uid')
+    if not uid:
+        return AppResponse('请先登录',401)
     conn = get_db()
-    uid = login_session['uid']
     sql = f"delete from USERS where uid = %s;"
     with conn:
         with conn.cursor() as cursor:
             cursor.execute(sql, (uid,))
             logger.info(f'delete data from databse by id<{uid}>')
             conn.commit()
-    del login_session['uid']
+    del login_session["uid"]
     return AppResponse("OK",200)
 
 # @app.errorhandler(404)
