@@ -128,7 +128,7 @@ def login():
     print('login: visitor is',visitor)
     assert(len(visitor)>0)
     login_session["username"] = visitor[0][1]
-    print('login_session["uid"]:',login_session["uid"])
+    # print('login_session["uid"]:',login_session["uid"])
     print('visitor:',visitor)
     # Add user to login_session
 
