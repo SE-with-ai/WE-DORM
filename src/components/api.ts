@@ -23,7 +23,7 @@ async function make_request(url: string, data) {
     if(error.response){
       console.log(error.response)
     }
-  })
+  }).then((res)=>(res.data))
   return response;
 }
 
@@ -42,7 +42,7 @@ export async function insertItem(item: ItemInserted) {
     (res)=>{window.alert(res );response=true;},
     (res)=>{window.alert(res );}
   );
-  return response
+  window.location.reload()
 }
 
 export async function virtueQuery() {
@@ -69,7 +69,7 @@ export async function itemsQuery(){
     
   await make_request("/api/items", {}).then((res)=>{
     console.log('itemsQuery response',res)
-    response = res?.data});
+    response = res});
   return response
 }
 export async function borrowListQuery() {
@@ -83,7 +83,7 @@ export async function updateItem(item: ItemOwned) {
    */
   let response = false
   await  make_request("/api/update-item", item).then((res)=>{window.alert(res );response=true;});
-  return response
+  window.location.reload()
 }
 export async function searchItem(nm: string) {
 
@@ -101,7 +101,7 @@ export async function borrowItem(item_id: number, deadline: Date) {
     // modi:dateToString(modified),
     ddl: dateToString(deadline),
   }).then((res)=>{window.alert(res );response=true;});
-  return response
+  window.location.reload()
 }
 export async function returnItem(share_id: number, item_id: number) {
   /* 
@@ -114,7 +114,7 @@ export async function returnItem(share_id: number, item_id: number) {
     sid: share_id,
     iid: item_id,
   }).then((res)=>{window.alert(res );response=true;});
-  return response
+  window.location.reload()
 
 }
 export async function deleteItem(item_id: number) {
@@ -125,10 +125,10 @@ export async function deleteItem(item_id: number) {
     */
   let response = false
   await make_request("/api/delete-item", { iid: item_id }).then(
-    (res)=>{window.alert(res );response=true;},
+    (res)=>{window.alert(res);response=true;},
     (res)=>{window.alert(res);}
   )
-  return response
+  window.location.reload()
 
   // TODO: in caller, deleteItem().then(load data)
 }
@@ -138,7 +138,7 @@ export async function deleteUser() {
 
 export async function loginFunc(name:string){
   let response=  '';
-  await make_request("/login",{username:name}).then((res)=>{response = true;})
-  window.sessionStorage['WEDORM-uid'] = response
+  await make_request("/login",{username:name}).then((res)=>{response = res;})
+  if (response != '')window.sessionStorage['WEDORM-uid'] = response
   
 }
