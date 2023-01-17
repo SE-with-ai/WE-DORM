@@ -62,7 +62,7 @@ def insert_user(conn, arg) -> int:
             conn.commit()
     return result[0] if result else None
 
-def insert_share(conn, uid, iid, modi, ddl) -> int:
+def insert_share(conn, uid, iid, modi, ddl,commit=True) -> int:
     """insert item data
 
     Args:
@@ -74,10 +74,10 @@ def insert_share(conn, uid, iid, modi, ddl) -> int:
             result = cursor.execute(sql, (uid, iid, modi, ddl))
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the databse')
-            conn.commit()
+            if commit: conn.commit()
     return result[0] if result else None
 
-def insert_item(conn, arg) -> int:
+def insert_item(conn, arg,commit=True) -> int:
     """insert item data
 
     Args:
@@ -87,13 +87,13 @@ def insert_item(conn, arg) -> int:
     with conn:
         with conn.cursor() as cursor:
             data = json.loads(arg)
-            result = cursor.execute(sql, (data['name'],data['brand'],data['disc'],data['qty'],data['is_con']))
+            result = cursor.execute(sql, (data['name'],data['brand'],data['description'],data['qty'],data['is_consume']))
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the databse')
-            conn.commit()
+            if commit: conn.commit()
     return result[0] if result else None
 
-def insert_own(conn, uid, iid) -> int:
+def insert_own(conn, uid, iid,commit=True) -> int:
     """insert item data
 
     Args:
@@ -105,10 +105,10 @@ def insert_own(conn, uid, iid) -> int:
             result = cursor.execute(sql, (uid,iid))
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the databse')
-            conn.commit()
+            if commit: conn.commit()
     return result[0] if result else None
 
-def insert_tag(conn, cid, iid) -> int:
+def insert_tag(conn, cid, iid,commit=True) -> int:
     """insert label data
 
     Args:
@@ -120,10 +120,10 @@ def insert_tag(conn, cid, iid) -> int:
             result = cursor.execute(sql, (cid, iid))
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the databse')
-            conn.commit()
+            if commit: conn.commit()
     return result[0] if result else None
 
-def insert_virlog(conn, uid, log_content) -> int:
+def insert_virlog(conn, uid, log_content,commit=True) -> int:
     """insert virtue log
 
     Args:
@@ -135,7 +135,7 @@ def insert_virlog(conn, uid, log_content) -> int:
             result = cursor.execute(sql, (uid, log_content))
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the virtue log')
-            conn.commit()
+            if commit: conn.commit()
     return result[0] if result else None
 
 def get_item_by_id(conn, id: int):
@@ -249,7 +249,7 @@ def get_data_by_name(conn, item_name: str, table_name):
     return result
 
 
-def update_virtue(conn, uid, num):
+def update_virtue(conn, uid, num,commit=True):
     """
     num是功德改变量，若减去则为负
     """
