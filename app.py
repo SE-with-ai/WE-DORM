@@ -103,14 +103,14 @@ def login():
         return "Must provide username", 403
     username = data.get("username")
     # Query database for username
-    # conn = get_db()
-    # visitor = get_data_by_name(conn,username,'USERS')
+    conn = get_db()
+    visitor = get_data_by_name(conn,username,'USERS')
 
 
     # Ensure username exists and password is correct
-    # if not visitor :
-    #     insert_user(conn,username)
-    #     visitor = get_data_by_name(conn,username,'USERS')
+    if not visitor :
+        insert_user(conn,username)
+        visitor = get_data_by_name(conn,username,'USERS')
 
     # Add user to login_session
     print(app.secret_key)
@@ -118,10 +118,6 @@ def login():
 
     # Redirect user to home page
     return username,200
-
-    # User reached route via GET (as by clicking a link or via redirect)
-    # else:
-    #     return render_template('login.html') 
 
 
 
