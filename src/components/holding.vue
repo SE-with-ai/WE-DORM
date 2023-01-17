@@ -119,6 +119,15 @@ const editForm = ref({
   is_consume:false,
   tag:'',
 })
+const defaultForm = {
+      iid: 0,
+  name:'',
+  brand:'',
+  description:'',
+  qty:0,
+  is_consume:false,
+  tag:'',
+}
 
 function handleEdit(index:number,row:ItemOwned)
 {
@@ -153,6 +162,7 @@ let item= editForm.value
   tag:itemTags
 } as ItemOwned)
   showEditor.value = false;
+  editForm.value = defaultForm
 
 }
 function handleCreate(index:number,row:ItemOwned)
@@ -186,7 +196,8 @@ let item= editForm.value
     tag:itemTags
   } as ItemInserted)
   showEditor.value = false;
-  showEditor.value = false;
+  editForm.value = defaultForm
+
 
 }
 

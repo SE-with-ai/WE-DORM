@@ -6,7 +6,7 @@
         <h1>WEDORM</h1>
         <!--TODO:use vue-router to go open login page-->
         
-            <el-button @click="deleteUserConfirm=!deleteUserConfirm">删除账号</el-button>
+            <el-button @click="deleteUserConfirm=!deleteUserConfirm" :if="loggedin">删除账号</el-button>
           <el-button @click="trick=!trick" :hidden="!deleteUserConfirm">确定？</el-button>
           <el-button :hidden="!trick">不让你删</el-button>
       </el-header>
@@ -16,16 +16,16 @@
   </el-container>
 
 </template>
-<script setup >
+<script setup lang="ts">
 import Holding from './components/Holding.vue'
 import Borrowed from './components/Borrowed.vue'
 import Virtue from './components/Virtue.vue'
-import {ref} from 'vue'
+import {ref,computed} from 'vue'
 import {container as WidgetContainerModal} from 'jenesius-vue-modal'
 
   const deleteUserConfirm = ref(false)
   const trick = ref(false)
-  const loggedin = ref(false)
+  const loggedin = computed(()=>{window.sessionStorage.getItem('WEDORM-uid') !== undefined;})
 </script>
 <style scoped>
 

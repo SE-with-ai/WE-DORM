@@ -62,6 +62,9 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app.debug = True
 
 
+def AppResponse(data,statuscode:int):
+    return jsonify(data),statuscode,[{'Access-Control-Allow-Origin':'*'}]
+
 
 def get_db():
     """Opens a new database connection if there is none yet for the
@@ -112,10 +115,10 @@ def login():
     print(json.loads(list(request.form)[0],strict=False))
     data = json.loads(list(request.form)[0],strict=False)
     if not data.get("username"):
-        return "Must provide username", 403
+        return AppResponse("Must provide username", 403)
     username = data.get("username")
     if IS_FRONTEND_DEBUG:
-        return username,200
+        return AppResponse(username,200)
     # Query database for username
     conn = get_db()
     visitor = get_data_by_name(conn,username,'USERS')
@@ -132,7 +135,7 @@ def login():
     # Add user to login_session
 
     # Redirect user to home page
-    return username,200
+    return AppResponse(username,200)
 
 
 
@@ -151,7 +154,7 @@ def insertItem():
             - 返回：HTTP状态
     """
     if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
-        return "添加成功",200
+        return AppResponse("添加成功",200)
     conn = get_db()
     # TODO: parse from request.form
     request_data = json.loads(list(request.form)[0],strict=False)
@@ -160,12 +163,12 @@ def insertItem():
     uid = login_session['uid']
     if not iid:
         conn.rollback()
-        return "添加物品失败",500
+        return AppResponse("添加物品失败",500)
     # sid = insert_share(conn, uid, modi, ddl)
     oid = insert_own(conn, uid, iid,commit=False)
     if not oid:
         conn.rollback()
-        return "添加拥有关系失败",500
+        return AppResponse("添加拥有关系失败",500)
     labels = data['tag'] # TODO: use tag
     # done = True
     for label in labels:
@@ -174,16 +177,16 @@ def insertItem():
             # if flag:
             #     conn.commit()
 
-                # return "添加成功，已有标签",200
-            # return "新建标签失败",500
+                # return AppResponse("添加成功，已有标签",200)
+            # return AppResponse("新建标签失败",500)
         else:
             flag = insert_tag(conn, label, iid)
             # if flag:
             #     conn.commit()
-            #     return "添加成功，新增标签",200
-            # return "新建标签失败",500
+            #     return AppResponse("添加成功，新增标签",200)
+            # return AppResponse("新建标签失败",500)
     conn.commit()
-    return "添加成功",200
+    return AppResponse("添加成功",200)
 
 @app.route('/api/virtue-query', methods=['POST'])
 @login_required
@@ -197,7 +200,7 @@ def virtueQuery():
     uid = login_session['uid']
 
     if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
-        return 114514,200
+        return AppResponse(114514,200)
 
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
@@ -208,7 +211,7 @@ def virtueQuery():
             cursor.execute(sql, (uid,))
             result = cursor.fetchone()
             logger.info(f'select data<{result}> from databse')
-    return result[1],200
+    return AppResponse(result[1],200)
 
 @app.route('/api/virlog', methods=['POST'])
 @login_required
@@ -220,7 +223,7 @@ def virlogQuery():
             - 返回： HTTP状态、功德日志
     """
     if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
-        return ['this','is','a','test'],200
+        return AppResponse(['this','is','a','test'],200)
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from VIRLOG where uid = %s;"
@@ -230,7 +233,7 @@ def virlogQuery():
             cursor.execute(sql, (uid,))
             result = cursor.fetchall()
             logger.info(f'select data<{result}> from virlog')
-    return [tp[1] for tp in result],200
+    return AppResponse([tp[1] for tp in result],200)
 # - 查询物品
 #   - 正在借用
 #   - 所拥有
@@ -252,7 +255,7 @@ def virlogQuery():
 def myItemList():
     """查询我提供的和正在借出的物品"""
     if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
-        return [{
+        print(AppResponse([{
                 'iid':1,
                 'name':'test item',
                 'brand':'item_info[2]',
@@ -261,7 +264,17 @@ def myItemList():
                 'is_consume':True,
                 'borrowing':False,
                 'tag':['tag1'],
-            }],200
+            }],200))
+        return AppResponse([{
+                'iid':1,
+                'name':'test item',
+                'brand':'item_info[2]',
+                'description':'item_info[3]',
+                'qty':4,
+                'is_consume':True,
+                'borrowing':False,
+                'tag':['tag1'],
+            }],200)
 
 
     conn = get_db()
@@ -294,16 +307,16 @@ def myItemList():
             }
             my_item.append(item)
         logger.info(f'select data<{my_item}> from databse')
-    return my_item,200
+    return AppResponse(my_item,200)
 
-# sid list是sid信息，不展示给用户，但是当用户选择要归还此物品时，需要记录这一物品借出记录的sid并传给return item函数
+# sid list是sid信息，不展示给用户，但是当用户选择要归还此物品时，需要记录这一物品借出记录的sid并传给return AppResponse(item函数
 # 因为sid才是借用的唯一标识（可能存在同一个人同时借用多个同名物品1
 @app.route('/api/borrow-list', methods=['POST'])
 @login_required
 def myBorrowList():
     """查询我正在借用的物品"""
     if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
-        return [{
+        return AppResponse([{
                 'sid':1,
                 'iid':1,
                 'name':'test_item_borrowed',
@@ -311,7 +324,7 @@ def myBorrowList():
                 'owner_name':'owner_info[1]',
                 'modified':datetime.today().isoformat(),
                 'ddl':datetime.today().date().isoformat()
-            }],200
+            }],200)
 
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
@@ -340,7 +353,7 @@ def myBorrowList():
                 'ddl':row[3].isoformat()
             })
         logger.info(f'select data<{result}> from databse')
-    return item_info,200
+    return AppResponse(item_info,200)
 
 @app.route('/api/update-item', methods=['POST'])
 @login_required
@@ -350,18 +363,18 @@ def updateMyItem():
     原信息用get_data_by_name函数获得，用户在原基础上修改后，把包括iid的全部表项传入此函数
     """
     if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
-        return "OK",200
+        return AppResponse("OK",200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"update ITEMS BRAND=%s, DESCRIPTION=%s, QTY=%s, IS_CONSUME=%s where iid=%s;"
     with conn:
         with conn.cursor() as cursor:
             result = cursor.execute(sql, (request_data['brand'], request_data['description'], request_data['qty'], request_data['is_consume'], request_data['iid']))
-            # if result[0] == "UPDATE 0": return "failed", 500
+            # if result[0] == "UPDATE 0": return AppResponse("failed", 500)
             result = cursor.fetchone()
             logger.info(f'update data<{result}> to the item')
             conn.commit()
-    return "OK",200
+    return AppResponse("OK",200)
 
 
 @app.route('/api/search-item', methods=['POST'])
@@ -372,12 +385,12 @@ def searchItem():
         物品信息列表，是否正在借出的列表，1代表借出中
     """
     if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
-        return [{
+        return AppResponse([{
                     'iid':1,
                     'name':'row[1]',
                     'owner_id':1,
                     'owner_name':'2',
-                }],200
+                }],200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from ITEMS where NAME LIKE %%%s%%;"
@@ -398,7 +411,7 @@ def searchItem():
                     'owner_name':owner_name,
                 })
         logger.info(f'select data<{result}> from item')
-    return result,200
+    return AppResponse(result,200)
 
 # 借流程：首先搜索物品，在返回的列表中选择是要借哪一个，把被选中的物品的id传入下面的borrow函数
 # borrow函数没有判断是否可借，因为搜索的时候已经返回了可借列表
@@ -428,7 +441,7 @@ def borrowItem():
     owner_id = get_owner_by_iid(conn, iid)[1]
     if owner_id == uid:
         conn.rollback()
-        return "拒绝理由：自己借给自己刷功德",500
+        return AppResponse("拒绝理由：自己借给自己刷功德",500)
     update_virtue(conn, owner_id, 2,commit=False)
     item_name = get_item_by_id(conn, iid)[1]
     user_name = get_user_by_id(conn, uid)[1]
@@ -437,10 +450,10 @@ def borrowItem():
     if is_consume: #消耗品，借出后不可归还
         # if qty-1==0:
         #     delete_item(conn, iid, uid)
-        #     return {'code': 200, 'msg': "全部借出，物品已删除"}) #这一部分改为借出至剩余0个时由owner来自行决定是补货update还是删除delete
+        #     return AppResponse({'code': 200, 'msg': "全部借出，物品已删除"}) #这一部分改为借出至剩余0个时由owner来自行决定是补货update还是删除delete
         if qty == 0:
             conn.rollback()
-            return "物品已消耗完，请考虑补货或删除",500
+            return AppResponse("物品已消耗完，请考虑补货或删除",500)
         sql = f"update ITEMS QTY=%s where iid=%s;"
         with conn:
             with conn.cursor() as cursor:
@@ -451,7 +464,7 @@ def borrowItem():
     else:
         insert_share(conn, uid, iid, modi, ddl,False)
     conn.commit()
-    return "OK",200
+    return AppResponse("OK",200)
 
 
 @app.route('/api/return-item', methods=['POST'])
@@ -470,7 +483,7 @@ def returnItem():
     - 返回：HTTP状态
     """
     if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
-        return "OK",200
+        return AppResponse("OK",200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
     sid, iid = request_data['sid'],request_data['iid']
@@ -491,7 +504,7 @@ def returnItem():
             # conn.commit()
     if uid==owner_id:
         conn.commit() # is oid == uid in SHARE acceptable?
-        return "自己借自己的东西并且成功归还，你比泰森厉害",200
+        return AppResponse("自己借自己的东西并且成功归还，你比泰森厉害",200)
     item_name = get_item_by_id(conn, iid)[1]
     user_name = get_user_by_id(conn, owner_id)[1]
     if ddl>time:
@@ -499,12 +512,12 @@ def returnItem():
         log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，准时，功德 +1>'
         insert_virlog(conn, uid, log_content,commit=False)
         conn.commit()
-        return "成功按时归还",200
+        return AppResponse("成功按时归还",200)
     update_virtue(conn, uid, -2,commit=False)
     log_content = f'<{str(time)}> 归还<{item_name}> 给 <{user_name}，超时，功德 -2>'
     insert_virlog(conn, uid, log_content,commit=False)
     conn.commit()
-    return "借用超时，成功归还",200
+    return AppResponse("借用超时，成功归还",200)
 
 
 @app.route('/api/delete-item', methods=['POST'])
@@ -523,13 +536,13 @@ def deleteItem():
     uid = login_session['uid']
     if not get_owner_by_iid(conn, iid)[1]==uid:
         conn.rollback()
-        return"非物品拥有者，删除失败",500
+        return AppResponse("非物品拥有者，删除失败",500)
 
     sql1 = f"delete from ITEMS where iid = %s;"
     sql2 = f"delete from TAGS where iid = %s;"
     if get_sharing_by_item_id(conn, iid):
         conn.rollback()
-        return "物品正在借出，无法删除",500
+        return AppResponse("物品正在借出，无法删除",500)
     with conn:
         with conn.cursor() as cursor:
             cursor.execute(sql1, (iid,))
@@ -537,7 +550,7 @@ def deleteItem():
             cursor.execute(sql2, (iid,))
             logger.info(f'delete data from tags by id<{iid}>')
             conn.commit()
-    return "物品已删除",200
+    return AppResponse("物品已删除",200)
 
 @app.route('/api/delete-user', methods=['POST'])
 @login_required
@@ -551,7 +564,7 @@ def deleteUser():
             logger.info(f'delete data from databse by id<{uid}>')
             conn.commit()
     del login_session['uid']
-    return redirect('/')
+    return AppResponse("OK",200)
 
 # @app.errorhandler(404)
 # def not_found(_):

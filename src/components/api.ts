@@ -1,21 +1,12 @@
 import axios from "axios";
 import { dateToString, ItemInserted, ItemOwned, ItemToBorrow, BorrowSuggestion } from "./utils";
-class http_request {
-  method = "POST";
-  baseURL = "http://127.0.0.1:5000";// 修改成后端的地址
-  url: string;
-  data: object;
-  constructor(url: string, data: object) {
-    this.url = url;
-    this.data = data;
-  }
-}
+
 async function make_request(url: string, data) {
-  let req = new http_request(url, data);
   let response = await axios({
-    method:req.method,
-    baseURL:req.baseURL,
+    method:"POST",
+    baseURL:"http://127.0.0.1:5000",
     url:url,
+    headers:{"Access-Control-Allow-Origin":"*"},
     data:JSON.stringify(data),
     transformRequest: [function (data, headers) {
       // Do whatever you want to transform the data
