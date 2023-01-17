@@ -29,7 +29,7 @@ const router = createRouter({
     {
         // 1. 用户未登录，但想访问需要认证的相关路由时，跳转到 登录 页
         // Vue.toasted.show('Please log in to access this page.', { icon: 'fingerprint' })
-        console.log('router beforeEach:',to.matched,token)
+        console.log('router beforeEach:',to.matched,window.sessionStorage.getItem('WEDORM-uid'))
         window.alert('未登录')
         next({
           path: '/login',

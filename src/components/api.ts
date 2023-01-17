@@ -26,6 +26,7 @@ async function make_request(url: string, data) {
     console.log('response success')
     return (res.data)
   },(error)=>{
+    console.log('make request error',error)
     if(error.response){
       console.log('response error',error.response)
       // window.alert(error.response)
@@ -33,7 +34,7 @@ async function make_request(url: string, data) {
         console.error('login',error)
         window.alert('auth error ',error.response)
         window.sessionStorage.removeItem('WEDORM-uid')
-      // router.push('/login')
+      router.push('/')
       }
     }
     else if (error.request){
@@ -163,6 +164,7 @@ export async function loginFunc(name:string){
   let response=  '';
   // window.alert(name)
   await make_request("/login",{username:name}).then((res)=>{response = res;})
+  console.log(response)
   if (response !== '')
   {
     console.log('login:',response)

@@ -26,8 +26,7 @@ const loginForm = ref({
 const router = useRouter()
 function onLogin(){
     // window.alert('onlogin')
-    loginFunc(loginForm.value.username)
-    router.push('/holding')
+    loginFunc(loginForm.value.username).then(()=>{router.push('/holding')})
 }
 </script>
 
