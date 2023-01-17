@@ -16,8 +16,8 @@ async function make_request(url: string, data) {
     }],
     transformResponse: [function (data) {
       // Do whatever you want to transform the data
-      console.log('response',data)
-      return data;
+      console.log('response',typeof(data),JSON.parse(data))
+      return JSON.parse(data);
     }],
   }).catch((error)=>{
     if(error.response){

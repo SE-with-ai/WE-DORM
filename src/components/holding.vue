@@ -105,7 +105,10 @@ const handleDelete = (index: number, row: ItemOwned) => {
 
 
 onBeforeMount(()=>{
-  itemsQuery().then((res)=>{tableData.value = res;})
+  itemsQuery().then((res)=>{
+    console.info(res)
+    tableData.value = res;
+    })
 })
 
 const showEditor = ref(false)

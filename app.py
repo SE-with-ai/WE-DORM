@@ -56,14 +56,14 @@ Session(app)
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 # r'/*' 是通配符，让本服务器所有的 URL 都允许跨域请求
-CORS(app, resources=r'/*')
+CORS(app, resources=r'/*',methods= ["GET", "HEAD", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"])
 
 # auth = HTTPBasicAuth()
 app.debug = True
 
 
 def AppResponse(data,statuscode:int):
-    return jsonify(data),statuscode,[{'Access-Control-Allow-Origin':'*'}]
+    return jsonify(data),statuscode #,[{'Access-Control-Allow-Origin':'*'}]
 
 
 def get_db():
@@ -98,7 +98,7 @@ def release_db(_):
 #     return render_template("error.html", top=code, bottom=escape(message)), code
 
 # @app.route('/',methods=['GET'])
-# @login_required
+@login_required
 # def main():
 #     return render_template('index.html')
 
@@ -141,8 +141,8 @@ def login():
 
 
 
+# @login_required
 @app.route('/api/insert-item', methods=['POST'])
-@login_required
 def insertItem():
     """
     提供物品
@@ -188,8 +188,8 @@ def insertItem():
     conn.commit()
     return AppResponse("添加成功",200)
 
+# @login_required
 @app.route('/api/virtue-query', methods=['POST'])
-@login_required
 def virtueQuery():
     """
     - 查询功德
@@ -213,8 +213,8 @@ def virtueQuery():
             logger.info(f'select data<{result}> from databse')
     return AppResponse(result[1],200)
 
+# @login_required
 @app.route('/api/virlog', methods=['POST'])
-@login_required
 def virlogQuery():
     """
     - 查询功德日志，实际上是在系统的提供/借用历史记录
@@ -248,11 +248,10 @@ def virlogQuery():
 #       - 状态：剩余n1,借出n2
 #         借用中，剩余(时间长)
 #       - 名称-品牌-描述-数量-是消耗品-标签
-#       - 查询物品返回的状态是字符串，可以是“拥有n1个，已借出n2个”，“借用n个，还剩[还可使用时间]“
+#       - 查询物品返回的状态是字符串，可以是"拥有n1个，已借出n2个"，"借用n个，还剩[还可使用时间]"
 
-@app.route('/api/items', methods=['POST'])
-@cross_origin(allow_headers=['Content-Type'])
-@login_required
+# @login_required
+@app.route('/api/items', methods=['POST','OPTIONS'])
 def myItemList():
     """查询我提供的和正在借出的物品"""
     if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
@@ -312,8 +311,8 @@ def myItemList():
 
 # sid list是sid信息，不展示给用户，但是当用户选择要归还此物品时，需要记录这一物品借出记录的sid并传给return AppResponse(item函数
 # 因为sid才是借用的唯一标识（可能存在同一个人同时借用多个同名物品1
+# @login_required
 @app.route('/api/borrow-list', methods=['POST'])
-@login_required
 def myBorrowList():
     """查询我正在借用的物品"""
     if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
@@ -356,8 +355,8 @@ def myBorrowList():
         logger.info(f'select data<{result}> from databse')
     return AppResponse(item_info,200)
 
+# @login_required
 @app.route('/api/update-item', methods=['POST'])
-@login_required
 def updateMyItem():
     """
     在不改变name的情况下更新物品信息，要求输入所有信息的更新。
@@ -378,8 +377,8 @@ def updateMyItem():
     return AppResponse("OK",200)
 
 
+# @login_required
 @app.route('/api/search-item', methods=['POST'])
-@login_required
 def searchItem():
     """fetch data by item_name
     Returns:
@@ -417,8 +416,8 @@ def searchItem():
 # 借流程：首先搜索物品，在返回的列表中选择是要借哪一个，把被选中的物品的id传入下面的borrow函数
 # borrow函数没有判断是否可借，因为搜索的时候已经返回了可借列表
 
+# @login_required
 @app.route('/api/borrow-item', methods=['POST'])
-@login_required
 def borrowItem():
     """
     记得传入modi最后修改时间和ddl时间，两者都是date格式
@@ -468,8 +467,8 @@ def borrowItem():
     return AppResponse("OK",200)
 
 
+# @login_required
 @app.route('/api/return-item', methods=['POST'])
-@login_required
 def returnItem():
     """
     先调用my_borrow_list，在页面中供用户选择要归还的项目，并从返回值中获得ownerid和借用的sid
@@ -521,8 +520,8 @@ def returnItem():
     return AppResponse("借用超时，成功归还",200)
 
 
+# @login_required
 @app.route('/api/delete-item', methods=['POST'])
-@login_required
 def deleteItem():
     """
     - 移出物品
@@ -553,8 +552,8 @@ def deleteItem():
             conn.commit()
     return AppResponse("物品已删除",200)
 
+# @login_required
 @app.route('/api/delete-user', methods=['POST'])
-@login_required
 def deleteUser():
     conn = get_db()
     uid = login_session['uid']
