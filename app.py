@@ -203,7 +203,7 @@ def virtueQuery():
 
     if IS_FRONTEND_DEBUG: 
         return AppResponse(114514,200)
-    if not uid:
+    if not username:
         return AppResponse('请先登录',401)
 
     conn = get_db()
@@ -230,7 +230,7 @@ def virlogQuery():
     username = login_session.get('username')
     if IS_FRONTEND_DEBUG: 
         return AppResponse(['this','is','a','test'],200)
-    if not uid:
+    if not username:
         return AppResponse('请先登录',401)
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
@@ -286,7 +286,7 @@ def myItemList():
 
 
     username = login_session.get('username')
-    if not uid:
+    if not username:
         return AppResponse('请先登录',401)
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
