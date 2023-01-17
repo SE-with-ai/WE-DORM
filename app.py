@@ -152,12 +152,13 @@ def insertItem():
             - 返回：HTTP状态
     """
     username = login_session.get('username')
-    uid = get_data_by_name(conn,username,'USERS')[0][0]
+    
     if not uid:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("添加成功",200)
     conn = get_db()
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     request_data = json.loads(list(request.form)[0],strict=False)
     data = json.loads(request_data['item'])
     iid = insert_item(conn, data,commit=False)
@@ -603,4 +604,4 @@ def deleteUser():
 # print(search_item(conn, "厕所"))
 
 if __name__ == '__main__':
-    app.run(host='192.168.0.105:15000')
+    app.run(host='192.168.0.107:15000')
