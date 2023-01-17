@@ -128,7 +128,7 @@ def login():
     print('login: visitor is',visitor)
     assert(len(visitor)>0)
     login_session["username"] = visitor[0][1]
-    print('login_session["uid"]:',login_session["uid"])
+    # print('login_session["uid"]:',login_session["uid"])
     print('visitor:',visitor)
     # Add user to login_session
 
@@ -152,11 +152,13 @@ def insertItem():
             - 返回：HTTP状态
     """
     username = login_session.get('username')
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("添加成功",200)
     conn = get_db()
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     request_data = json.loads(list(request.form)[0],strict=False)
     data = json.loads(request_data['item'])
     uid = get_data_by_name(conn,username,'USERS')[0][0]
@@ -603,4 +605,4 @@ def deleteUser():
 # print(search_item(conn, "厕所"))
 
 if __name__ == '__main__':
-    app.run(host='192.168.0.105:15000')
+    app.run(host='192.168.0.107:15000')
