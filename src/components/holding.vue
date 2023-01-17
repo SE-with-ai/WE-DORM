@@ -167,18 +167,12 @@ let item= editForm.value
   editForm.value = defaultForm
 
 }
-function handleCreate(index:number,row:ItemOwned)
+function handleCreate()
 {
   showEditor.value = true;
   // load data into form
   
-    let item= tableData.value[index];
-  editForm.value.name = ''
-  if(item.brand)editForm.value.brand = ''
-  if(item.description)editForm.value.description = ''
-  editForm.value.qty = 0
-  editForm.value.is_consume = false
-  if(item.tag)editForm.value.tag = item.tag.join(', ')
+    editForm.value = defaultForm;
 }
 
 const handleCreateSubmit = () => {

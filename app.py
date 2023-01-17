@@ -530,6 +530,8 @@ def deleteItem():
             - param：物品id，数量
             - 返回：HTTP状态
     """
+    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+        return AppResponse("OK",200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
     iid = request_data['iid']
