@@ -5,7 +5,7 @@
         <el-form-item label="输入用户名：">
         <el-input class="form-control" v-model="loginForm.username" placeholder="username" size="45"  required/>
         </el-form-item>
-                <router-link to="/"><el-button @click="onLogin">Login</el-button></router-link>
+                <el-button @click="onLogin">Login</el-button>
     </el-form>
     </div>
  
@@ -24,7 +24,8 @@ function onLogin(){
     loginFunc(loginForm.value.username).then(
         ()=>{
             // TODO: redirect to '/'
-            useRouter()
+            const router = useRouter()
+            router.push('/')
         }
     )
 }
