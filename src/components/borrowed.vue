@@ -28,6 +28,7 @@
 
 
     <el-select
+    id="search-bar"
         v-model="selected"
         placeholder="搜索想借的物品"
         :remote-method="onSearch"
@@ -180,7 +181,7 @@ const onBorrowSubmit = (index: number, row: ItemOwned) => {
 
 <style>
 /* Style the search field */
-form.example input[type=text] {
+#search-bar.example input[type=text] {
   padding: 10px;
   font-size: 17px;
   border: 1px solid grey;
@@ -190,7 +191,7 @@ form.example input[type=text] {
 }
 
 /* Style the submit button */
-form.example button {
+#search-bar.example button {
   float: left;
   width: 20%;
   padding: 10px;
@@ -202,12 +203,12 @@ form.example button {
   cursor: pointer;
 }
 
-form.example button:hover {
+#search-bar.example button:hover {
   background: #0b7dda;
 }
 
 /* Clear floats */
-form.example::after {
+#search-bar.example::after {
   content: "";
   clear: both;
   display: table;
