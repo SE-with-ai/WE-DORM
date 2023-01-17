@@ -12,24 +12,24 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 const router = createRouter({
     history: createWebHistory(),
     routes: [
-      { path: '/', component: Holding
+      { path: '/holding', component: Holding
       ,meta: {requiresAuth: true} 
     },
-      { path: '/login', component: Login  },
+      { path: '/', component: Login  },
       { path: '/virtue', component: Virtue,meta: {requiresAuth: true} },
       { path: '/borrow', component: Borrowed,meta: {requiresAuth: true}  },
     ],
   })
   router.beforeEach((to, from, next) => {
     const token = window.sessionStorage.getItem('WEDORM-uid')
-
+    
     if (
       to.matched.some(record => record.meta.requiresAuth) && 
     (!token || token === null)) 
     {
         // 1. 用户未登录，但想访问需要认证的相关路由时，跳转到 登录 页
         // Vue.toasted.show('Please log in to access this page.', { icon: 'fingerprint' })
-        console.log(to.matched)
+        console.log('router beforeEach:',to.matched,token)
         window.alert('未登录')
         next({
           path: '/login',

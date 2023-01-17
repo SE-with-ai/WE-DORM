@@ -138,7 +138,7 @@ const onSearch = (query: string)=>{
     options.value = []
   }
   searchItem(search.value).then((res)=>{
-    option.value = res
+    options.value = res
   })
   showSuggestions.value = true
 }

@@ -5,7 +5,7 @@
       <el-header>
         <h1>WEDORM</h1>
         <!--TODO:use vue-router to go open login page-->
-        <router-link to="/">
+        <router-link to="/holding">
           <el-button>自己的物品</el-button>
         </router-link>
         <router-link to="/borrow">

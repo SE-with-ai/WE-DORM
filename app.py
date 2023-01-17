@@ -124,7 +124,7 @@ def login():
     if not visitor :
         insert_user(conn,data)
         visitor = get_data_by_name(conn,username,'USERS')
-    print(visitor)
+    print('login: visitor is',visitor)
     assert(len(visitor)>0)
     login_session["uid"] = visitor[0][1]
 

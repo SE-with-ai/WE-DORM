@@ -27,7 +27,7 @@ const router = useRouter()
 function onLogin(){
     // window.alert('onlogin')
     loginFunc(loginForm.value.username)
-    router.push('/')
+    router.push('/holding')
 }
 </script>
 

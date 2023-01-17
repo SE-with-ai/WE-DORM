@@ -60,7 +60,7 @@ def insert_user(conn, arg) -> int:
             cursor.execute(virsql, (result[0],0)) # 功德初始值为0
             logger.info(f'add data<{result}> to the databse')
             conn.commit()
-    return result[0] if result else None
+    return result if result else None
 
 def insert_share(conn, uid, iid, modi, ddl,commit=True) -> int:
     """insert item data
@@ -75,7 +75,7 @@ def insert_share(conn, uid, iid, modi, ddl,commit=True) -> int:
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the databse')
             if commit: conn.commit()
-    return result[0] if result else None
+    return result if result else None
 
 def insert_item(conn, arg,commit=True) -> int:
     """insert item data
@@ -91,7 +91,7 @@ def insert_item(conn, arg,commit=True) -> int:
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the databse')
             if commit: conn.commit()
-    return result[0] if result else None
+    return result if result else None
 
 def insert_own(conn, uid, iid,commit=True) -> int:
     """insert item data
@@ -106,7 +106,7 @@ def insert_own(conn, uid, iid,commit=True) -> int:
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the databse')
             if commit: conn.commit()
-    return result[0] if result else None
+    return result if result else None
 
 def insert_tag(conn, cid, iid,commit=True) -> int:
     """insert label data
@@ -121,7 +121,7 @@ def insert_tag(conn, cid, iid,commit=True) -> int:
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the databse')
             if commit: conn.commit()
-    return result[0] if result else None
+    return result if result else None
 
 def insert_virlog(conn, uid, log_content,commit=True) -> int:
     """insert virtue log
@@ -136,7 +136,7 @@ def insert_virlog(conn, uid, log_content,commit=True) -> int:
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the virtue log')
             if commit: conn.commit()
-    return result[0] if result else None
+    return result if result else None
 
 def get_item_by_id(conn, id: int):
     """fetch data by id

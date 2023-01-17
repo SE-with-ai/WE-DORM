@@ -23,6 +23,7 @@ async function make_request(url: string, data) {
     }],
   }).then((res)=>{
     // window.alert('success')
+    console.log('response success')
     return (res.data)
   },(error)=>{
     if(error.response){
@@ -30,7 +31,7 @@ async function make_request(url: string, data) {
       // window.alert(error.response)
       if(error.response.status === 401){
         console.error('login',error)
-        // window.alert(error.response)
+        window.alert('auth error ',error.response)
         window.sessionStorage.removeItem('WEDORM-uid')
       // router.push('/login')
       }
@@ -165,12 +166,13 @@ export async function loginFunc(name:string){
   if (response !== '')
   {
     console.log('login:',response)
-    window.sessionStorage.putItem('WEDORM-uid' ,response)
+    window.sessionStorage.setItem('WEDORM-uid' ,response)
+    // window.alert('pause success')
   }
   else 
   {
     console.log('empty response')
-    window.alert('pause')
+    // window.alert('pause')
   }
   // const router = useRouter() 
   // router.push('/')
