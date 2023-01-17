@@ -14,7 +14,7 @@ from flask import Flask
 import os, logging, sys, datetime
 from copy import deepcopy
 from flask import Flask, flash, redirect, render_template, request, session as login_session, json
-# from flask_session import Session 
+from flask_session import Session 
 from tempfile import mkdtemp
 # from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 # from werkzeug.security import check_password_hash, generate_password_hash
@@ -22,21 +22,16 @@ from tempfile import mkdtemp
 
 # from helpers import apology, login_required
 
-class CustomFlask(Flask):
-    jinja_options = Flask.jinja_options.copy()
-    jinja_options.update(dict(
-        variable_start_string='%%',  # Default is '{{', I'm changing this because Vue.js uses '{{' / '}}'
-        variable_end_string='%%',
-    ))
 
 # Configure application
-app = CustomFlask(__name__,template_folder='.')
-# app.config["SECRET_KEY"] = "\x87\xa5\xb1@\xe8\xb2r\x0b\xbb&\xf7\xe9\x84-\x17\xdc\xf8\xfc9l7\xbb\xe9q"
+CSRF_ENABLED = True
+app = Flask(__name__)
+app.config["SECRET_KEY"] = "\x87\xa5\xb1@\xe8\xb2r\x0b\xbb&\xf7\xe9\x84-\x17\xdc\xf8\xfc9l7\xbb\xe9q"
 # app.config["SECRET_KEY"] = b'_5#y2L"F4Q8z\n\xec]/'
-app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
+# app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 app.debug = True
 # Ensure templates are auto-reloaded
-app.config["TEMPLATES_AUTO_RELOAD"] = True
+# app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 # Ensure responses aren't cached
 # @app.after_request
@@ -47,20 +42,20 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 #     return response
 
 # # Configure session to use filesystem (instead of signed cookies)
-# app.config["SESSION_FILE_DIR"] = mkdtemp()
-# app.config["SESSION_PERMANENT"] = False
-# app.config["SESSION_TYPE"] = "filesystem"
-# Session(app)
+app.config["SESSION_FILE_DIR"] = mkdtemp()
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_USE_SIGNER"] = False
+Session(app)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-app = Flask(__name__)
+
 
 # r'/*' 是通配符，让本服务器所有的 URL 都允许跨域请求
 CORS(app, resources=r'/*')
 
 # auth = HTTPBasicAuth()
-CSRF_ENABLED = True
 app.debug = True
 
 
@@ -101,26 +96,28 @@ def login():
     """
 
     # Ensure username was submitted
-    if not request.form.get("username"):
+    print(list(request.form)[0])
+    print(json.loads(list(request.form)[0],strict=False))
+    data = json.loads(list(request.form)[0],strict=False)
+    if not data.get("username"):
         return "Must provide username", 403
-    username = request.form.get("username")
-    print(request.form)
+    username = data.get("username")
     # Query database for username
-    conn = get_db()
-    visitor = get_data_by_name(conn,username,'USERS')
+    # conn = get_db()
+    # visitor = get_data_by_name(conn,username,'USERS')
 
-    # print(visitor, visitor.id, visitor.hash, file=sys.stderr)
 
     # Ensure username exists and password is correct
-    if not visitor :
-        insert_user(conn,username)
-        visitor = get_data_by_name(conn,username,'USERS')
+    # if not visitor :
+    #     insert_user(conn,username)
+    #     visitor = get_data_by_name(conn,username,'USERS')
 
     # Add user to login_session
-    login_session["uid"] = visitor.id
+    print(app.secret_key)
+    login_session["uid"] = username
 
     # Redirect user to home page
-    return visitor.id,200
+    return username,200
 
     # User reached route via GET (as by clicking a link or via redirect)
     # else:

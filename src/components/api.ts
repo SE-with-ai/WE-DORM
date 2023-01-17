@@ -10,13 +10,24 @@ class http_request {
     this.data = data;
   }
 }
-async function make_request(url: string, data: object) {
+async function make_request(url: string, data) {
   let req = new http_request(url, data);
   let response = await axios({
     method:req.method,
     baseURL:req.baseURL,
-    url:req.url,
-    data:req.data,
+    url:url,
+    data:JSON.stringify(data),
+    transformRequest: [function (data, headers) {
+      // Do whatever you want to transform the data
+      console.log('request',data)
+  
+      return data;
+    }],
+    transformResponse: [function (data) {
+      // Do whatever you want to transform the data
+      console.log('response',data)
+      return data;
+    }],
   }).catch((error)=>{
     if(error.response){
       console.log(error.response)
