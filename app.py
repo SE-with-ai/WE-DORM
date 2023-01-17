@@ -111,7 +111,6 @@ def login():
     # Ensure username was submitted
     data = json.loads(list(request.form)[0],strict=False)
     username = data.get("username")
-    username = 'ANDY'
     if IS_FRONTEND_DEBUG:
         # login_session['username'] = username
         print('login: login_session[\'username\'] is',login_session['username'])

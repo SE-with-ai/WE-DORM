@@ -38,6 +38,7 @@
     <el-table-column prop="description" label="Description" width="180" />
     <el-table-column prop="qty" label="Quantity" width="180" />
     <el-table-column prop="is_consume" label="Consumable" width="180" />
+    <el-table-column prop="borrowing" label="Borrowing" width="180" />
     <!--TODO:可以用input简化，改成comma-separated-->
     <el-table-column
       prop="tag"
