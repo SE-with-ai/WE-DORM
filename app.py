@@ -113,6 +113,7 @@ def login():
     # Ensure username was submitted
     data = json.loads(list(request.form)[0],strict=False)
     username = data.get("username")
+    print(username)
     if IS_FRONTEND_DEBUG:
         login_session['uid'] = username
         return AppResponse(username,200)
@@ -196,11 +197,11 @@ def virtueQuery():
             - 返回： HTTP状态、功德值
     """
     uid = login_session.get('uid')
-    if not uid:
-        return AppResponse('请先登录',401)
 
     if IS_FRONTEND_DEBUG: 
         return AppResponse(114514,200)
+    if not uid:
+        return AppResponse('请先登录',401)
 
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
@@ -223,10 +224,10 @@ def virlogQuery():
             - 返回： HTTP状态、功德日志
     """
     uid = login_session.get('uid')
-    if not uid:
-        return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse(['this','is','a','test'],200)
+    if not uid:
+        return AppResponse('请先登录',401)
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from VIRLOG where uid = %s;"

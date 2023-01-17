@@ -31,10 +31,20 @@ import { beforeMain } from '@popperjs/core'
 
 const virtueRef = ref()
 const tableRef = ref<InstanceType<typeof ElTable>>()
-const tableData= ref<string[]>([])
+const tableData= ref([] as {
+  text:string
+}[])
 onBeforeMount(()=>{
   virtueQuery().then((res)=>{virtueRef.value = res})
-  virlogQuery().then((res)=>{tableData.value = res as string[]})
+  virlogQuery().then((res)=>{
+    let ress = [] as {
+  text:string
+}[]
+  for (let st in res){
+    ress.push({text:st})
+  }
+  tableData.value = ress;
+    })
 })
 
 
