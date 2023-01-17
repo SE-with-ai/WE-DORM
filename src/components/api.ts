@@ -18,18 +18,28 @@ async function make_request(url: string, data) {
     }],
     transformResponse: [function (data) {
       // Do whatever you want to transform the data
-      console.log('response',typeof(data),JSON.parse(data))
+      console.log('response',JSON.parse(data))
       return JSON.parse(data);
     }],
-  }).catch((error)=>{
+  }).then((res)=>{
+    // window.alert('success')
+    return (res.data)
+  },(error)=>{
     if(error.response){
       console.log('response error',error.response)
+      // window.alert(error.response)
+      if(error.response.status === 401){
+        console.error('login',error)
+        // window.alert(error.response)
+        window.sessionStorage.removeItem('WEDORM-uid')
+      // router.push('/login')
+      }
     }
-    if(error.response.status === 401){
-      window.sessionStorage.removeItem('WEDORM-uid')
-      router.push('/login')
+    else if (error.request){
+      console.log('request error',error.request)
+      // window.alert(error.request)
     }
-  }).then((res)=>(res.data))
+  })
   console.log(response)
   return response;
 }
@@ -148,9 +158,16 @@ export async function deleteUser() {
   window.sessionStorage.removeItem('WEDORM-uid')
 }
 
-export async function loginFunc(name:string){
+export async function loginFunc(router,name:string){
   let response=  '';
+  // window.alert(name)
   await make_request("/login",{username:name}).then((res)=>{response = res;})
-  if (response != '')window.sessionStorage['WEDORM-uid'] = response
-  
+  if (response != '')
+  {
+    console.log('login:',response)
+    window.sessionStorage['WEDORM-uid'] = response
+  }
+  else console.log('empty response')
+  // const router = useRouter() 
+  // router.push('/')
 }

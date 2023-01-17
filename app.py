@@ -98,7 +98,7 @@ def release_db(_):
 #     return render_template("error.html", top=code, bottom=escape(message)), code
 
 # @app.route('/',methods=['GET'])
-@login_required
+
 # def main():
 #     return render_template('index.html')
 
@@ -112,10 +112,9 @@ def login():
 
     # Ensure username was submitted
     data = json.loads(list(request.form)[0],strict=False)
-    if not data.get("username"):
-        return AppResponse("Must provide username", 403)
     username = data.get("username")
     if IS_FRONTEND_DEBUG:
+        login_session['uid'] = username
         return AppResponse(username,200)
     # Query database for username
     conn = get_db()
@@ -139,7 +138,7 @@ def login():
 
 
 
-# @login_required
+
 @app.route('/api/insert-item', methods=['POST'])
 def insertItem():
     """
@@ -187,7 +186,7 @@ def insertItem():
     conn.commit()
     return AppResponse("添加成功",200)
 
-# @login_required
+
 @app.route('/api/virtue-query', methods=['POST'])
 def virtueQuery():
     """
@@ -214,7 +213,7 @@ def virtueQuery():
             logger.info(f'select data<{result}> from databse')
     return AppResponse(result[1],200)
 
-# @login_required
+
 @app.route('/api/virlog', methods=['POST'])
 def virlogQuery():
     """
@@ -253,7 +252,7 @@ def virlogQuery():
 #       - 名称-品牌-描述-数量-是消耗品-标签
 #       - 查询物品返回的状态是字符串，可以是"拥有n1个，已借出n2个"，"借用n个，还剩[还可使用时间]"
 
-# @login_required
+
 @app.route('/api/items', methods=['POST','OPTIONS'])
 def myItemList():
     """查询我提供的和正在借出的物品"""
@@ -317,7 +316,7 @@ def myItemList():
 
 # sid list是sid信息，不展示给用户，但是当用户选择要归还此物品时，需要记录这一物品借出记录的sid并传给return AppResponse(item函数
 # 因为sid才是借用的唯一标识（可能存在同一个人同时借用多个同名物品1
-# @login_required
+
 @app.route('/api/borrow-list', methods=['POST'])
 def myBorrowList():
     """查询我正在借用的物品"""
@@ -363,7 +362,7 @@ def myBorrowList():
         logger.info(f'select data<{result}> from databse')
     return AppResponse(item_info,200)
 
-# @login_required
+
 @app.route('/api/update-item', methods=['POST'])
 def updateMyItem():
     """
@@ -385,7 +384,7 @@ def updateMyItem():
     return AppResponse("OK",200)
 
 
-# @login_required
+
 @app.route('/api/search-item', methods=['POST'])
 def searchItem():
     """fetch data by item_name
@@ -424,7 +423,7 @@ def searchItem():
 # 借流程：首先搜索物品，在返回的列表中选择是要借哪一个，把被选中的物品的id传入下面的borrow函数
 # borrow函数没有判断是否可借，因为搜索的时候已经返回了可借列表
 
-# @login_required
+
 @app.route('/api/borrow-item', methods=['POST'])
 def borrowItem():
     """
@@ -443,7 +442,7 @@ def borrowItem():
         return AppResponse('请先登录',401)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
-     iid = request_data['iid']
+    iid = request_data['iid']
     ddl_list = request_data['ddl'].split('-')
     modi, ddl = datetime.now(),datetime.datetime(ddl_list[0],ddl_list[1],ddl_list[2])
     data = get_item_by_id(conn, iid)
@@ -478,7 +477,7 @@ def borrowItem():
     return AppResponse("OK",200)
 
 
-# @login_required
+
 @app.route('/api/return-item', methods=['POST'])
 def returnItem():
     """
@@ -533,7 +532,7 @@ def returnItem():
     return AppResponse("借用超时，成功归还",200)
 
 
-# @login_required
+
 @app.route('/api/delete-item', methods=['POST'])
 def deleteItem():
     """
@@ -569,7 +568,7 @@ def deleteItem():
             conn.commit()
     return AppResponse("物品已删除",200)
 
-# @login_required
+
 @app.route('/api/delete-user', methods=['POST'])
 def deleteUser():
     uid = login_session.get('uid')

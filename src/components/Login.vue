@@ -1,11 +1,14 @@
 <template>
    <div class="container">
           <h1 >登入</h1>
-    <el-form :model="loginForm" method="post">
+    <el-form :model="loginForm">
         <el-form-item label="输入用户名：">
         <el-input class="form-control" v-model="loginForm.username" placeholder="username" size="45"  required/>
         </el-form-item>
-                <el-button @click="onLogin">Login</el-button>
+        <el-form-item>
+
+            <el-button @click="onLogin">Login</el-button>
+        </el-form-item>
     </el-form>
     </div>
  
@@ -22,12 +25,9 @@ const loginForm = ref({
 })
 const router = useRouter()
 function onLogin(){
-    loginFunc(loginForm.value.username).then(
-        ()=>{
-            // TODO: redirect to '/'
-            router.push('/')
-        }
-    )
+    // window.alert('onlogin')
+    loginFunc(loginForm.value.username)
+    router.push('/')
 }
 </script>
 
