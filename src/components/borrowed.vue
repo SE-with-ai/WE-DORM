@@ -27,15 +27,15 @@
   </el-form>
 
 
-  <el-select
+  <el-autocomplete
     id="search-bar"
         v-model="selected"
         placeholder="搜索想借的物品"
         remote
         filterable
-        :remote-method="onSearch"
+        :fetch-suggestion="onSearch"
         :loading="loading"
-        @change="onSelectSuggestion"
+        @select="onSelectSuggestion"
       >
         <el-option
           v-for="item in options"
@@ -43,7 +43,7 @@
           :label="item.item_name+'（'+item.owner_name+'）'"
           :value="item.iid"
         />
-      </el-select>
+  </el-autocomplete>
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">
     <el-table-column prop="name" label="Item" width="180" />
     <el-table-column prop="owner" label="Name" width="180" />
@@ -173,13 +173,13 @@ function onSelectSuggestion()
   showEditor.value = true;
 }
 
-const onBorrowSubmit = (index: number, row: ItemOwned) => {
+const onBorrowSubmit = () => {
   // 
     let item= tableData.value[index];
     let itemTags = {tag:[] as string[]}
     if(item.tag)delete item['tag']
     itemTags['tag'] = tableData.value[index]['tag']
-  borrowItem([item]).then(()=>{
+  borrowItem().then(()=>{
   tableData.value = borrowListQuery()
   })
   console.log(index, row)
@@ -190,38 +190,4 @@ const onBorrowSubmit = (index: number, row: ItemOwned) => {
 </script>
 
 <style>
-/* Style the search field */
-#search-bar.example input[type=text] {
-  padding: 10px;
-  font-size: 17px;
-  border: 1px solid grey;
-  float: left;
-  width: 80%;
-  background: #f1f1f1;
-}
-
-/* Style the submit button */
-#search-bar.example button {
-  float: left;
-  width: 20%;
-  padding: 10px;
-  background: #2196F3;
-  color: white;
-  font-size: 17px;
-  border: 1px solid grey;
-  border-left: none; /* Prevent double borders */
-  cursor: pointer;
-}
-
-#search-bar.example button:hover {
-  background: #0b7dda;
-}
-
-/* Clear floats */
-#search-bar.example::after {
-  content: "";
-  clear: both;
-  display: table;
-}
-
 </style>

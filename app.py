@@ -113,7 +113,7 @@ def login():
     username = data.get("username")
     print(username)
     if IS_FRONTEND_DEBUG:
-        login_session['uid'] = username
+        login_session['username'] = username
         return AppResponse(username,200)
     # Query database for username
     conn = get_db()
@@ -126,7 +126,7 @@ def login():
         visitor = get_data_by_name(conn,username,'USERS')
     print('login: visitor is',visitor)
     assert(len(visitor)>0)
-    login_session["uid"] = visitor[0][1]
+    login_session["username"] = visitor[0][1]
 
     # Add user to login_session
 
@@ -149,7 +149,8 @@ def insertItem():
             - tag由最后一次query得到的物品的tag分析（split by comma）统计成set，保存成变量
             - 返回：HTTP状态
     """
-    uid = login_session.get('uid')
+    username = login_session.get('username')
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
@@ -194,7 +195,8 @@ def virtueQuery():
             - POST
             - 返回： HTTP状态、功德值
     """
-    uid = login_session.get('uid')
+    username = login_session.get('username')
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
 
     if IS_FRONTEND_DEBUG: 
         return AppResponse(114514,200)
@@ -221,7 +223,8 @@ def virlogQuery():
             - POST
             - 返回： HTTP状态、功德日志
     """
-    uid = login_session.get('uid')
+    username = login_session.get('username')
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if IS_FRONTEND_DEBUG: 
         return AppResponse(['this','is','a','test'],200)
     if not uid:
@@ -278,7 +281,8 @@ def myItemList():
             }],200)
 
 
-    uid = login_session.get('uid')
+    username = login_session.get('username')
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     conn = get_db()
@@ -330,7 +334,8 @@ def myBorrowList():
                 'ddl':date.today().isoformat()
             }],200)
 
-    uid = login_session.get('uid')
+    username = login_session.get('username')
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     conn = get_db()
@@ -436,7 +441,8 @@ def borrowItem():
         - 参数: userid
         - 返回：HTTP状态
     """
-    uid = login_session.get('uid')
+    username = login_session.get('username')
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     conn = get_db()
@@ -491,7 +497,8 @@ def returnItem():
     - param: 对象userid，物品id，数量
     - 返回：HTTP状态
     """
-    uid = login_session.get('uid')
+    username = login_session.get('username')
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
@@ -541,7 +548,8 @@ def deleteItem():
             - param：物品id，数量
             - 返回：HTTP状态
     """
-    uid = login_session.get('uid')
+    username = login_session.get('username')
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
@@ -570,7 +578,8 @@ def deleteItem():
 
 @app.route('/api/delete-user', methods=['POST'])
 def deleteUser():
-    uid = login_session.get('uid')
+    username = login_session.get('username')
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     conn = get_db()
