@@ -122,7 +122,7 @@ def login():
         return username,200
     # Query database for username
     conn = get_db()
-    visitor = get_data_by_name(conn,username,'USERS')
+    visitor = get_data_by_name(conn,username,'USERS')[0]
 
 
     # Ensure username exists and password is correct
@@ -155,7 +155,7 @@ def insertItem():
             - 返回：HTTP状态
     """
     if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
-        return 
+        return "添加成功",200
     conn = get_db()
     # TODO: parse from request.form
     request_data = json.loads(list(request.form)[0],strict=False)
@@ -198,10 +198,14 @@ def virtueQuery():
             - POST
             - 返回： HTTP状态、功德值
     """
+    uid = login_session['uid']
+
+    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+        return 114514,200
+
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
     
-    uid = login_session['uid']
     sql = f"select * from VIRTUE where uid = %s;"
     with conn:
         with conn.cursor() as cursor:
@@ -219,6 +223,8 @@ def virlogQuery():
             - POST
             - 返回： HTTP状态、功德日志
     """
+    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+        return ['this','is','a','test'],200
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from VIRLOG where uid = %s;"
@@ -249,6 +255,19 @@ def virlogQuery():
 @login_required
 def myItemList():
     """查询我提供的和正在借出的物品"""
+    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+        return [{
+                'iid':1,
+                'name':'test item',
+                'brand':'item_info[2]',
+                'description':'item_info[3]',
+                'qty':4,
+                'is_consume':True,
+                'borrowing':False,
+                'tag':['tag1'],
+            }],200
+
+
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from OWN where uid = %s;"
@@ -287,6 +306,17 @@ def myItemList():
 @login_required
 def myBorrowList():
     """查询我正在借用的物品"""
+    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+        return [{
+                'sid':1,
+                'iid':1,
+                'name':'test_item_borrowed',
+                'owner_uid':1,
+                'owner_name':'owner_info[1]',
+                'modified':datetime.today().isoformat(),
+                'ddl':datetime.today().date().isoformat()
+            }],200
+
     conn = get_db()
     # request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from SHARE where uid = %s;"
@@ -323,6 +353,8 @@ def updateMyItem():
     在不改变name的情况下更新物品信息，要求输入所有信息的更新。
     原信息用get_data_by_name函数获得，用户在原基础上修改后，把包括iid的全部表项传入此函数
     """
+    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+        return "OK",200
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"update ITEMS BRAND=%s, DESCRIPTION=%s, QTY=%s, IS_CONSUME=%s where iid=%s;"
@@ -343,6 +375,13 @@ def searchItem():
     Returns:
         物品信息列表，是否正在借出的列表，1代表借出中
     """
+    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+        return [{
+                    'iid':1,
+                    'name':'row[1]',
+                    'owner_id':1,
+                    'owner_name':'2',
+                }],200
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from ITEMS where NAME LIKE %%%s%%;"
@@ -434,6 +473,8 @@ def returnItem():
     - param: 对象userid，物品id，数量
     - 返回：HTTP状态
     """
+    if IS_FRONTEND_DEBUG: # TODO: test all api using default return, no need to care about data change
+        return "OK",200
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
     sid, iid = request_data['sid'],request_data['iid']
