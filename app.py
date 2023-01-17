@@ -158,8 +158,8 @@ def insertItem():
         return AppResponse("添加成功",200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
-    uid = get_data_by_name(conn,username,'USERS')[0][0]
     data = json.loads(request_data['item'])
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     iid = insert_item(conn, data,commit=False)
     if not iid:
         conn.rollback()
@@ -201,7 +201,7 @@ def virtueQuery():
 
     if IS_FRONTEND_DEBUG: 
         return AppResponse(114514,200)
-    if not uid:
+    if not username:
         return AppResponse('请先登录',401)
 
     conn = get_db()
@@ -228,7 +228,7 @@ def virlogQuery():
     username = login_session.get('username')
     if IS_FRONTEND_DEBUG: 
         return AppResponse(['this','is','a','test'],200)
-    if not uid:
+    if not username:
         return AppResponse('请先登录',401)
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
@@ -284,7 +284,7 @@ def myItemList():
 
 
     username = login_session.get('username')
-    if not uid:
+    if not username:
         return AppResponse('请先登录',401)
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
@@ -337,7 +337,7 @@ def myBorrowList():
             }],200)
 
     username = login_session.get('username')
-    if not uid:
+    if not username:
         return AppResponse('请先登录',401)
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
@@ -444,7 +444,7 @@ def borrowItem():
         - 返回：HTTP状态
     """
     username = login_session.get('username')
-    if not uid:
+    if not username:
         return AppResponse('请先登录',401)
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
@@ -500,7 +500,7 @@ def returnItem():
     - 返回：HTTP状态
     """
     username = login_session.get('username')
-    if not uid:
+    if not username:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("OK",200)
@@ -551,7 +551,7 @@ def deleteItem():
             - 返回：HTTP状态
     """
     username = login_session.get('username')
-    if not uid:
+    if not username:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("OK",200)
@@ -581,7 +581,7 @@ def deleteItem():
 @app.route('/api/delete-user', methods=['POST'])
 def deleteUser():
     username = login_session.get('username')
-    if not uid:
+    if not username:
         return AppResponse('请先登录',401)
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
