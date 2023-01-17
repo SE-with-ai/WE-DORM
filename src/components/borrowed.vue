@@ -1,7 +1,7 @@
 <template>
 
 <!-- 借物品form -->
-  <el-form :model="borrowForm" label-width="120px" :hidden="!showEditor">
+  <el-form :model="borrowForm" :hidden="!showEditor">
     <el-form-item></el-form-item>
     <el-form-item label="Item Name">
       <el-input v-model="borrowForm.name" required="true" from="" disabled/>
@@ -21,29 +21,19 @@
     </el-form-item>
     <el-form-item>
 
-      <el-button type="primary" @click="onBorrowSubmit" >开借</el-button>
-      <el-button @click="showEditor=false">Cancel</el-button>
+      <el-button type="primary" @click="onBorrowSubmit" >借！</el-button>
+      <el-button @click="showEditor=false">取消</el-button>
     </el-form-item>
   </el-form>
 
 
   <el-autocomplete
     id="search-bar"
-        v-model="selected"
+        v-model="query_string"
         placeholder="搜索想借的物品"
-        remote
-        filterable
-        :fetch-suggestion="onSearch"
-        :loading="loading"
+        :fetch-suggestions="onSearch"
         @select="onSelectSuggestion"
-      >
-        <el-option
-          v-for="item in options"
-          :key="item.iid"
-          :label="item.item_name+'（'+item.owner_name+'）'"
-          :value="item.iid"
-        />
-  </el-autocomplete>
+      />
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">
     <el-table-column prop="name" label="Item" width="180" />
     <el-table-column prop="owner" label="Name" width="180" />
@@ -64,7 +54,7 @@
   </el-table>
 </template>
 <script setup lang="ts">
-import {ref,computed, onMounted} from 'vue'
+import {ref,computed, onMounted,watchEffect} from 'vue'
 import {BorrowSuggestion, Item, ItemOwned,ItemToBorrow} from './utils'
 import { ElTable, type TableColumnCtx } from 'element-plus'
 import { returnItem, searchItem,borrowItem,borrowListQuery } from './api'
@@ -76,29 +66,11 @@ const tableRef = ref<InstanceType<typeof ElTable>>()
 const tableData= ref<ItemOwned[]>([])
 
 
-const filterTag = (value: string[], row: ItemOwned) => {
-  
-  return value.length === 0 || row.tag.sort().toString() === value.sort().toString()
-}
-const tagsRef = ref<string[]>([])
-const filterHandler = (
-  value: string,
-  row: ItemToBorrow,
-  column: TableColumnCtx<ItemOwned>
-) => {
-  const property = column['property']
-  return row[property] === value
-}
-
 
 const handleReturn = async (index: number, row: ItemToBorrow) => {
   console.log(index, row)
 
-  await returnItem(row.sid,row.iid).then(
-        ()=>{
-      tableData.value = borrowListQuery()
-        }
-  )
+  await returnItem(row.sid,row.iid)
 }
 
 
@@ -108,7 +80,7 @@ onMounted(()=>{
   
 })
 
-
+const query_string = ref('')
 const options = ref<BorrowSuggestion[]>([])
 const selected = ref<BorrowSuggestion>({
   iid:0 ,
@@ -123,23 +95,23 @@ const loading = ref(false)
 
 const search = ref('')
 const showSuggestions = ref(false)
-const onSearch = (query: string)=>{
-  if (query) {
-    loading.value = true
-    setTimeout(() => {
-      searchItem(query).then((res)=>{
-        
-        options.value = res
+let timeout=2000
+watchEffect(async () => {
+  const response = await searchItem(query_string.value)
+  options.value = await response
+})
+const onSearch = (query: string, cb: (arg: any) => void)=>{
+    const results = query
+    ? options.value
+    : []
 
-        })
-      loading.value = false
-    }, 200)
-  } else {
-    options.value = []
-  }
-  searchItem(search.value).then((res)=>{
-    options.value = res
-  })
+  clearTimeout(timeout)
+  timeout = setTimeout(() => {
+    cb(results)
+  }, 3000 * Math.random())
+
+
+
   showSuggestions.value = true
 }
 
@@ -154,40 +126,67 @@ const borrowForm = ref({
   ddl:new Date(),
 
 })
+const defaultForm = {
+  iid: 0,// read from item chosen
+  name:'',// read from item chosen
+  brand:'',// read from item chosen
+  description:'',// read from item chosen
+  is_consume:false,// read from item chosen
+  owner:'',// read from item chosen
+  ddl:new Date(),
+
+}
 
 const disabledDate = (time: Date) => {
   return time.getTime() < Date.now()
 }
 
-function onSelectSuggestion()
+function onSelectSuggestion(item:BorrowSuggestion)
 {
   // load data into form
-  let item = selected.value
   borrowForm.value.iid = item.iid
-  borrowForm.value.name = item.name
+  borrowForm.value.name = item.item_name
   if(item.brand)borrowForm.value.brand = item.brand
   if(item.description)borrowForm.value.description = item.description
-  borrowForm.value.qty = item.qty
   borrowForm.value.is_consume = item.is_consume
-  if(item.tag)borrowForm.value.tag = item.tag
   showEditor.value = true;
 }
 
 const onBorrowSubmit = () => {
   // 
-    let item= tableData.value[index];
-    let itemTags = {tag:[] as string[]}
-    if(item.tag)delete item['tag']
-    itemTags['tag'] = tableData.value[index]['tag']
-  borrowItem().then(()=>{
-  tableData.value = borrowListQuery()
-  })
-  console.log(index, row)
+    let item= borrowForm.value;
+  borrowItem(item.iid,item.ddl)
   showEditor.value = false;
-
+  borrowForm.value = defaultForm
 }
 
 </script>
 
-<style>
+<style >
+
+/* Inline #4 | http://127.0.0.1:5173/borrow */
+
+.el-picker-panel.el-date-picker {
+  background-color: white;
+}
+
+/* Inline #3 | http://127.0.0.1:5173/borrow */
+
+.el-form-item {
+  /* margin: 20% 0% auto auto; */
+}
+
+/* Inline #4 | http://127.0.0.1:5173/borrow */
+
+.el-form {
+  display: grid;
+}
+
+/* Inline #4 | http://127.0.0.1:5173/borrow */
+
+i>svg {
+  width: 3em;
+  display: inline-block;
+}
+
 </style>
