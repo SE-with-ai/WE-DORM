@@ -78,6 +78,8 @@ def get_db():
 
 @app.teardown_request
 def release_db():
+    if IS_FRONTEND_DEBUG:
+        return
     if hasattr(g,'db_conn'):
         g.db_conn.close()
         g.pop('db_conn')
@@ -126,7 +128,7 @@ def login():
     # Ensure username exists and password is correct
     if not visitor :
         insert_user(conn,username)
-        visitor = get_data_by_name(conn,username,'USERS')
+        visitor = get_data_by_name(conn,username,'USERS')[0]
     print(visitor)
     assert(len(visitor)>0)
     login_session["uid"] = visitor[1]
