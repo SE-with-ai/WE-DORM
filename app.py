@@ -152,7 +152,7 @@ def insertItem():
             - 返回：HTTP状态
     """
     username = login_session.get('username')
-    
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
@@ -160,6 +160,7 @@ def insertItem():
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     request_data = json.loads(list(request.form)[0],strict=False)
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     data = json.loads(request_data['item'])
     iid = insert_item(conn, data,commit=False)
     if not iid:
@@ -199,7 +200,6 @@ def virtueQuery():
             - 返回： HTTP状态、功德值
     """
     username = login_session.get('username')
-    uid = get_data_by_name(conn,username,'USERS')[0][0]
 
     if IS_FRONTEND_DEBUG: 
         return AppResponse(114514,200)
@@ -207,6 +207,7 @@ def virtueQuery():
         return AppResponse('请先登录',401)
 
     conn = get_db()
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     # request_data = json.loads(list(request.form)[0],strict=False)
     
     sql = f"select * from VIRTUE where uid = %s;"
@@ -227,12 +228,12 @@ def virlogQuery():
             - 返回： HTTP状态、功德日志
     """
     username = login_session.get('username')
-    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if IS_FRONTEND_DEBUG: 
         return AppResponse(['this','is','a','test'],200)
     if not uid:
         return AppResponse('请先登录',401)
     conn = get_db()
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     # request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from VIRLOG where uid = %s;"
     with conn:
@@ -285,10 +286,10 @@ def myItemList():
 
 
     username = login_session.get('username')
-    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     conn = get_db()
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     # request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from OWN where uid = %s;"
     my_item = []
@@ -338,10 +339,10 @@ def myBorrowList():
             }],200)
 
     username = login_session.get('username')
-    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     conn = get_db()
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     # request_data = json.loads(list(request.form)[0],strict=False)
     sql = f"select * from SHARE where uid = %s;"
     item_info = []
@@ -445,10 +446,10 @@ def borrowItem():
         - 返回：HTTP状态
     """
     username = login_session.get('username')
-    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     conn = get_db()
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     request_data = json.loads(list(request.form)[0],strict=False)
     iid = request_data['iid']
     ddl_list = request_data['ddl'].split('-')
@@ -501,12 +502,12 @@ def returnItem():
     - 返回：HTTP状态
     """
     username = login_session.get('username')
-    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("OK",200)
     conn = get_db()
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     request_data = json.loads(list(request.form)[0],strict=False)
     sid, iid = request_data['sid'],request_data['iid']
     time = datetime.now()
@@ -552,12 +553,12 @@ def deleteItem():
             - 返回：HTTP状态
     """
     username = login_session.get('username')
-    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("OK",200)
     conn = get_db()
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     request_data = json.loads(list(request.form)[0],strict=False)
     iid = request_data['iid']
     if not get_owner_by_iid(conn, iid)[1]==uid:
@@ -582,10 +583,10 @@ def deleteItem():
 @app.route('/api/delete-user', methods=['POST'])
 def deleteUser():
     username = login_session.get('username')
-    uid = get_data_by_name(conn,username,'USERS')[0][0]
     if not uid:
         return AppResponse('请先登录',401)
     conn = get_db()
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     sql = f"delete from USERS where uid = %s;"
     with conn:
         with conn.cursor() as cursor:
