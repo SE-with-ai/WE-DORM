@@ -39,7 +39,7 @@ export interface ItemInserted {
   description?:string
   qty:number
   is_consume:boolean
-  tags:string[]
+  tag:string[]
 }
 
 export interface ItemOwned{

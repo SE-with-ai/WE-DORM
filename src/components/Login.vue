@@ -20,11 +20,11 @@ import { loginFunc } from './api';
 const loginForm = ref({
     username:''
 })
+const router = useRouter()
 function onLogin(){
     loginFunc(loginForm.value.username).then(
         ()=>{
             // TODO: redirect to '/'
-            const router = useRouter()
             router.push('/')
         }
     )

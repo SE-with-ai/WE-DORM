@@ -37,7 +37,7 @@ async function make_request(url: string, data) {
 }
 
 
-export async function insert_item(item: ItemInserted[]) {
+export async function insertItem(item: ItemInserted) {
   /* 
     return json.dumps({'code': 500, 'msg': "添加物品失败"})
     return json.dumps({'code': 500, 'msg': "添加拥有关系失败"})

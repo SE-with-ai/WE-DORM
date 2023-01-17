@@ -12,7 +12,10 @@
       <el-input v-model="editForm.description" />
     </el-form-item>
     <el-form-item label="Consumable">
-      <el-switch v-model="editForm.is_consume" />
+      <el-checkbox v-model="editForm.is_consume" />
+    </el-form-item>
+    <el-form-item label="Tags（用','分开）">
+      <el-input v-model="editForm.tag" />
     </el-form-item>
 
     <el-form-item>
@@ -26,7 +29,7 @@
 
   <!-- tag control buttons -->
   <!-- <el-button @click="resetTagFilter">reset date filter</el-button> -->
-  <el-button @click="handleCreate">增加物品</el-button>
+  <el-button @click="handleCreate" :hidden="showEditor">增加物品</el-button>
   
   <!-- owned item list -->
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">
@@ -66,10 +69,10 @@
 </template>
 <script setup lang="ts">
 import axios from 'axios'
-import {ref,computed,onMounted, watchEffect} from 'vue'
-import {Item, ItemOwned} from './utils'
+import {ref,computed,onBeforeMount, watchEffect} from 'vue'
+import {ItemInserted, ItemOwned} from './utils'
 import { ElTable, type TableColumnCtx } from 'element-plus'
-import { deleteItem, itemsQuery, searchItem, updateItem } from './api'
+import { deleteItem, itemsQuery, searchItem, updateItem,insertItem } from './api'
 
 
 
@@ -101,8 +104,8 @@ const handleDelete = (index: number, row: ItemOwned) => {
 
 
 
-onMounted(()=>{
-  tableData.value = itemsQuery()
+onBeforeMount(()=>{
+  itemsQuery().then((res)=>{tableData.value = res;})
 })
 
 const showEditor = ref(false)
@@ -114,7 +117,7 @@ const editForm = ref({
   description:'',
   qty:0,
   is_consume:false,
-  tag:[] as string[],
+  tag:'',
 })
 
 function handleEdit(index:number,row:ItemOwned)
@@ -128,17 +131,27 @@ function handleEdit(index:number,row:ItemOwned)
   if(item.description)editForm.value.description = item.description
   editForm.value.qty = item.qty
   editForm.value.is_consume = item.is_consume
-  if(item.tag)editForm.value.tag = item.tag
+  if(item.tag)editForm.value.tag = item.tag.join(', ')
 }
 
-const handleEditSubmit = (index: number, row: ItemOwned) => {
-  // 
-    let item= tableData.value[index];
-    let itemTags = {tag:[] as string[]}
-    if(item.tag)delete item['tag']
-    itemTags['tag'] = tableData.value[index]['tag']
-  updateItem([item])
-  console.log(index, row)
+const handleEditSubmit = () => {
+
+let item= editForm.value
+    console.log(item)
+    let itemTags = [] as string[]
+    itemTags= item['tag'].split(',')
+    itemTags.forEach((tag)=>tag.trim())
+
+  updateItem({
+  iid: item['iid'],
+  name:item['name'],
+  brand:item['brand'],
+  description:item['description'],
+  qty:item['qty'],
+  is_consume:item['is_consume'],
+  borrowing:false,
+  tag:itemTags
+} as ItemOwned)
   showEditor.value = false;
 
 }
@@ -153,17 +166,26 @@ function handleCreate(index:number,row:ItemOwned)
   if(item.description)editForm.value.description = ''
   editForm.value.qty = 0
   editForm.value.is_consume = false
-  if(item.tag)editForm.value.tag = item.tag
+  if(item.tag)editForm.value.tag = item.tag.join(', ')
 }
 
-const handleCreateSubmit = (index: number, row: ItemOwned) => {
-  // 
-    let item= tableData.value[index];
-    let itemTags = {tag:[] as string[]}
-    if(item.tag)delete item['tag']
-    itemTags['tag'] = tableData.value[index]['tag']
-  updateItem(item)
-  console.log(index, row)
+const handleCreateSubmit = () => {
+
+let item= editForm.value
+    console.log(item)
+    let itemTags = [] as string[]
+    itemTags= item['tag'].split(',')
+    itemTags.forEach((tag)=>tag.trim())
+
+    insertItem({
+    name:item['name'],
+    brand:item['brand'],
+    description:item['description'],
+    qty:item['qty'],
+    is_consume:item['is_consume'],
+    tag:itemTags
+  } as ItemInserted)
+  showEditor.value = false;
   showEditor.value = false;
 
 }

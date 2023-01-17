@@ -35,7 +35,7 @@ if (
       path: '/login',
       query: { redirect: to.fullPath }
     })
-  } else if (token !== '' && (to.name == 'Login')) {
+  } else if (token !== '' && (to.name == 'login')) {
     // 4. 用户已登录，但又去访问 登录/注册/请求重置密码/重置密码 页面时不让他过去
     next({
       path: from.fullPath
