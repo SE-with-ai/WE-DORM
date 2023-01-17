@@ -54,7 +54,7 @@ def insert_user(conn, arg) -> int:
     virsql = f"insert into VIRTUE (UID, VIRTUE) values (%s,%s) RETURNING *;"
     with conn:
         with conn.cursor() as cursor:
-            data = json.loads(arg)
+            data = arg
             result = cursor.execute(usersql, (data['name'],data['dorm'],data['email']))
             result = cursor.fetchone()
             cursor.execute(virsql, (result[0],0)) # 功德初始值为0
@@ -86,7 +86,7 @@ def insert_item(conn, arg,commit=True) -> int:
     sql = f"insert into ITEMS (NAME,BRAND,DESCRIPTION,QTY,IS_CONSUME) values (%s,%s,%s,%s,%s) RETURNING *;"
     with conn:
         with conn.cursor() as cursor:
-            data = json.loads(arg)
+            data = arg
             result = cursor.execute(sql, (data['name'],data['brand'],data['description'],data['qty'],data['is_consume']))
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the databse')
