@@ -5,7 +5,7 @@
         <el-form-item label="输入用户名：">
         <el-input class="form-control" v-model="loginForm.username" placeholder="username" size="45"  required/>
         </el-form-item>
-                <el-button @click="onLogin">Login</el-button>
+                <router-link to="/"><el-button @click="onLogin">Login</el-button></router-link>
     </el-form>
     </div>
  
@@ -14,6 +14,7 @@
 <script setup lang="ts">
 
 import {ref} from 'vue'
+import { useRouter } from 'vue-router';
 import { loginFunc } from './api';
 
 const loginForm = ref({
@@ -23,6 +24,7 @@ function onLogin(){
     loginFunc(loginForm.value.username).then(
         ()=>{
             // TODO: redirect to '/'
+            useRouter()
         }
     )
 }

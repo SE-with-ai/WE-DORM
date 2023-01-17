@@ -27,8 +27,6 @@ from tempfile import mkdtemp
 CSRF_ENABLED = True
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "\x87\xa5\xb1@\xe8\xb2r\x0b\xbb&\xf7\xe9\x84-\x17\xdc\xf8\xfc9l7\xbb\xe9q"
-# app.config["SECRET_KEY"] = b'_5#y2L"F4Q8z\n\xec]/'
-# app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 app.debug = True
 # Ensure templates are auto-reloaded
 # app.config["TEMPLATES_AUTO_RELOAD"] = True
@@ -49,8 +47,6 @@ app.config["SESSION_USE_SIGNER"] = False
 Session(app)
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-
-
 
 # r'/*' 是通配符，让本服务器所有的 URL 都允许跨域请求
 CORS(app, resources=r'/*')
@@ -113,7 +109,6 @@ def login():
         visitor = get_data_by_name(conn,username,'USERS')
 
     # Add user to login_session
-    print(app.secret_key)
     login_session["uid"] = username
 
     # Redirect user to home page
