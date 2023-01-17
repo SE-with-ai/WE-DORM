@@ -152,11 +152,11 @@ def insertItem():
             - 返回：HTTP状态
     """
     username = login_session.get('username')
-    uid = get_data_by_name(conn,username,'USERS')[0][0]
-    if not uid:
+    if not username:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("添加成功",200)
+    uid = get_data_by_name(conn,username,'USERS')[0][0]
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     request_data = json.loads(list(request.form)[0],strict=False)
@@ -201,10 +201,10 @@ def virtueQuery():
     """
     username = login_session.get('username')
 
-    if IS_FRONTEND_DEBUG: 
-        return AppResponse(114514,200)
     if not username:
         return AppResponse('请先登录',401)
+    if IS_FRONTEND_DEBUG: 
+        return AppResponse(114514,200)
 
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
@@ -228,10 +228,10 @@ def virlogQuery():
             - 返回： HTTP状态、功德日志
     """
     username = login_session.get('username')
-    if IS_FRONTEND_DEBUG: 
-        return AppResponse(['this','is','a','test'],200)
     if not username:
         return AppResponse('请先登录',401)
+    if IS_FRONTEND_DEBUG: 
+        return AppResponse(['this','is','a','test'],200)
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     # request_data = json.loads(list(request.form)[0],strict=False)

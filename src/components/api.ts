@@ -56,9 +56,8 @@ export async function insertItem(item: ItemInserted) {
     return json.dumps({'code': 200, 'msg': "添加成功，新增标签"})
     */
 
-  let response = false
   await  make_request("/api/insert-item", { item:JSON.stringify(item) }).then(
-    (res)=>{window.alert(res );response=true;},
+    (res)=>{window.alert(res );},
     (res)=>{window.alert(res );}
   );
   window.location.reload()
