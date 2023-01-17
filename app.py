@@ -73,7 +73,7 @@ def get_db():
     return g.db_conn
 
 @app.teardown_request
-def release_db():
+def release_db(_):
     if IS_FRONTEND_DEBUG:
         return
     if hasattr(g,'db_conn'):
