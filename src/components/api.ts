@@ -114,7 +114,7 @@ export async function updateItem(item: ItemOwned) {
 }
 export async function searchItem(nm: string) {
 
-  let response = []as BorrowSuggestion[];
+  let response = [];
   await make_request("/api/search-item", { name: nm }).then((res)=>{response = res})
   return response
   
@@ -123,7 +123,7 @@ export async function borrowItem(item_id: number, deadline: Date) {
   /* return {"code":200} */
   
   let response = false
-  await  make_request("/api/search-item", {
+  await  make_request("/api/borrow-item", {
     iid: item_id,
     // modi:dateToString(modified),
     ddl: dateToString(deadline),

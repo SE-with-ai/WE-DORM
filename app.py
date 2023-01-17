@@ -111,7 +111,7 @@ def login():
     # Ensure username was submitted
     data = json.loads(list(request.form)[0],strict=False)
     username = data.get("username")
-    username = 'ANDY'
+    # username = 'ANDY'
     if IS_FRONTEND_DEBUG:
         # login_session['username'] = username
         print('login: login_session[\'username\'] is',login_session['username'])
@@ -294,8 +294,8 @@ def myItemList():
             iid = row[2]
             item_info = get_item_by_id(conn, iid)
 
-            tags = get_tag_by_id(conn, item_info[1])
-            if tags: item_info['tag']= tags
+            tags = get_tag_by_id(conn, item_info[0])
+            
             borrowing = False
             if get_sharing_by_item_id(conn, iid):
                 borrowing=True
@@ -409,10 +409,11 @@ def searchItem():
     if not username:
         return AppResponse('请先登录',401)
     sql = f"select * from ITEMS where NAME LIKE %s;"
+    print("req_data:",request_data)
     item_name: str = request_data['name']
     item_info = []
     with conn.cursor() as cursor:
-        cursor.execute(sql, ('\%'+item_name+'\%',))
+        cursor.execute(sql, (item_name,))
         result = cursor.fetchall()
         for row in result:
             owner = get_owner_by_iid(conn,row[0])
@@ -510,7 +511,7 @@ def returnItem():
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     sid, iid = request_data['sid'],request_data['iid']
-    time = datetime.now()
+    time = datetime.datetime.now()
     sqlget = f"select * from SHARE where sid = %s;"
     sql = f"delete from SHARE where sid = %s;"
     with conn:
@@ -522,8 +523,15 @@ def returnItem():
             iid = result[2]
             cursor.execute(sql, (sid,))
             logger.info(f'delete data from share by id<{sid}>')
-            owner_id = get_owner_by_iid(conn, iid)[1]
-            # conn.commit()
+            sql = f"select * from OWN where iid = %s;"
+            # with conn:
+                # with conn.cursor() as cursor:
+            cursor.execute(sql, (iid,))
+            result = cursor.fetchone()
+            logger.info(f'select data<{result}> from own')
+            owner_id = result[1]
+            # owner_id = get_owner_by_iid(conn, iid)[1]
+    # conn.commit()
     if uid==owner_id:
         conn.commit() # is oid == uid in SHARE acceptable?
         return AppResponse("自己借自己的东西并且成功归还，你比泰森厉害",200)

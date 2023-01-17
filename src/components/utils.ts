@@ -64,6 +64,7 @@ export interface ItemToBorrow{
 }
 
 export interface BorrowSuggestion{
+  value:string
   iid:number 
   item_name:string
   brand?:string

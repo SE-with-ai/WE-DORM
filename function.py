@@ -91,7 +91,7 @@ def insert_item(conn, arg,commit=True) -> int:
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the databse')
             if commit: conn.commit()
-    return result if result else None
+    return result[0] if result else None
 
 def insert_own(conn, uid, iid,commit=True) -> int:
     """insert item data
@@ -103,10 +103,11 @@ def insert_own(conn, uid, iid,commit=True) -> int:
     with conn:
         with conn.cursor() as cursor:
             result = cursor.execute(sql, (uid,iid))
+            # result = cursor.execute(sql, (uid,1))
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the databse')
             if commit: conn.commit()
-    return result if result else None
+    return result[0] if result else None
 
 def insert_tag(conn, cid, iid,commit=True) -> int:
     """insert label data
@@ -192,6 +193,7 @@ def get_tag_by_id(conn, id: int):
             result = cursor.fetchall()
             logger.info(f'select data<{result}> from tags')
     return result
+
 def get_user_by_id(conn, id: int):
     """fetch data by id
 
