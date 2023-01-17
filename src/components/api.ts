@@ -33,7 +33,7 @@ async function make_request(url: string, data) {
       if(error.response.status === 401){
         console.error('login',error)
         window.alert('auth error ',error.response)
-        window.sessionStorage.removeItem('WEDORM-uid')
+        window.localStorage.removeItem('WEDORM-uid')
       router.push('/')
       }
     }
@@ -157,7 +157,7 @@ export async function deleteItem(item_id: number) {
 }
 export async function deleteUser() {
   make_request("/api/delete-user", {});
-  window.sessionStorage.removeItem('WEDORM-uid')
+  window.localStorage.removeItem('WEDORM-uid')
 }
 
 export async function loginFunc(name:string){
@@ -168,7 +168,7 @@ export async function loginFunc(name:string){
   if (response !== '')
   {
     console.log('login:',response)
-    window.sessionStorage.setItem('WEDORM-uid' ,response)
+    window.localStorage.setItem('WEDORM-uid' ,response)
     // window.alert('pause success')
   }
   else 
