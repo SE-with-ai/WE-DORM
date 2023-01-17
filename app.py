@@ -1,7 +1,7 @@
 import os
 import re
 import json
-from datetime import datetime
+from datetime import datetime,date
 from function import *
 
 from flask import Flask, g, jsonify,render_template, redirect, make_response, request,session as login_session
@@ -322,8 +322,8 @@ def myBorrowList():
                 'name':'test_item_borrowed',
                 'owner_uid':1,
                 'owner_name':'owner_info[1]',
-                'modified':datetime.today().isoformat(),
-                'ddl':datetime.today().date().isoformat()
+                'modified':date.today().isoformat(),
+                'ddl':date.today().isoformat()
             }],200)
 
     conn = get_db()

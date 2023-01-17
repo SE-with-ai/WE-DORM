@@ -70,12 +70,16 @@ export async function itemsQuery(){
   await make_request("/api/items", {}).then((res)=>{
     console.log('itemsQuery response',res)
     response = res});
-  return response
-}
-export async function borrowListQuery() {
-
+    return response
+  }
+  export async function borrowListQuery() {
+    
     let response =[] as ItemToBorrow[];
-  await make_request("/api/borrow-list", {}).then((res)=>{response = res});
+    await make_request("/api/borrow-list", {}).then((res)=>{
+    console.log('borrowListQuery response',res)
+    response = res
+  
+  });
   return response
 }
 export async function updateItem(item: ItemOwned) {

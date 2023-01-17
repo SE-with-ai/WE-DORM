@@ -27,10 +27,12 @@
   </el-form>
 
 
-    <el-select
+  <el-select
     id="search-bar"
         v-model="selected"
         placeholder="搜索想借的物品"
+        remote
+        filterable
         :remote-method="onSearch"
         :loading="loading"
         @change="onSelectSuggestion"
@@ -108,7 +110,15 @@ onMounted(()=>{
 
 
 const options = ref<BorrowSuggestion[]>([])
-const selected = ref<BorrowSuggestion>([])
+const selected = ref<BorrowSuggestion>({
+  iid:0 ,
+  item_name:'',
+  brand:'',
+  description:'',
+  owner_id:0 ,
+  owner_name:'' ,
+  is_consume:false,
+})
 const loading = ref(false)
 
 const search = ref('')
