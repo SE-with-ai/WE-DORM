@@ -32,8 +32,7 @@ const router = createRouter({
         console.log('router beforeEach:',to.matched,window.localStorage.getItem('WEDORM-uid'))
         window.alert('未登录')
         next({
-          path: '/login',
-          query: { redirect: to.fullPath }
+          path: '/'
         })
       } else if (token !== '' && (to.name == 'login')) {
         // 4. 用户已登录，但又去访问 登录/注册/请求重置密码/重置密码 页面时不让他过去

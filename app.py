@@ -39,12 +39,12 @@ app.debug = True
 
 
 # Ensure responses aren't cached
-# @app.after_request
-# def after_request(response):
-#     response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-#     response.headers["Expires"] = 0
-#     response.headers["Pragma"] = "no-cache"
-#     return response
+@app.after_request
+def after_request(response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Expires"] = 0
+    response.headers["Pragma"] = "no-cache"
+    return response
 
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_FILE_DIR"] = mkdtemp()
@@ -111,10 +111,10 @@ def login():
     # Ensure username was submitted
     data = json.loads(list(request.form)[0],strict=False)
     username = data.get("username")
-    print(username)
     username = 'ANDY'
     if IS_FRONTEND_DEBUG:
-        login_session['username'] = username
+        # login_session['username'] = username
+        print('login: login_session[\'username\'] is',login_session['username'])
         return AppResponse(username,200)
     # Query database for username
     conn = get_db()
@@ -127,13 +127,13 @@ def login():
         visitor = get_data_by_name(conn,username,'USERS')
     print('login: visitor is',visitor)
     assert(len(visitor)>0)
-    login_session["username"] = visitor[0][1]
+    # login_session["username"] = visitor[0][1]
     # print('login_session["uid"]:',login_session["uid"])
     print('visitor:',visitor)
     # Add user to login_session
 
     # Redirect user to home page
-    return AppResponse(username,200)
+    return AppResponse(visitor[0][1],200)
 
 
 
@@ -151,15 +151,14 @@ def insertItem():
             - tag由最后一次query得到的物品的tag分析（split by comma）统计成set，保存成变量
             - 返回：HTTP状态
     """
-    username = login_session.get('username')
+    request_data = json.loads(list(request.form)[0],strict=False)
+    username = request_data.get('WEDORM-uid')
     if not username:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("添加成功",200)
-    uid = get_data_by_name(conn,username,'USERS')[0][0]
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
-    request_data = json.loads(list(request.form)[0],strict=False)
     data = json.loads(request_data['item'])
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     iid = insert_item(conn, data,commit=False)
@@ -199,7 +198,8 @@ def virtueQuery():
             - POST
             - 返回： HTTP状态、功德值
     """
-    username = login_session.get('username')
+    request_data = json.loads(list(request.form)[0],strict=False)
+    username = request_data.get('WEDORM-uid')
 
     if not username:
         return AppResponse('请先登录',401)
@@ -227,7 +227,9 @@ def virlogQuery():
             - POST
             - 返回： HTTP状态、功德日志
     """
-    username = login_session.get('username')
+    request_data = json.loads(list(request.form)[0],strict=False)
+    username = request_data.get('WEDORM-uid')
+    print('virlog: username is ',username)
     if not username:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
@@ -263,16 +265,6 @@ def virlogQuery():
 def myItemList():
     """查询我提供的和正在借出的物品"""
     if IS_FRONTEND_DEBUG: 
-        print(AppResponse([{
-                'iid':1,
-                'name':'test item',
-                'brand':'item_info[2]',
-                'description':'item_info[3]',
-                'qty':4,
-                'is_consume':True,
-                'borrowing':False,
-                'tag':['tag1'],
-            }],200))
         return AppResponse([{
                 'iid':1,
                 'name':'test item',
@@ -285,7 +277,8 @@ def myItemList():
             }],200)
 
 
-    username = login_session.get('username')
+    request_data = json.loads(list(request.form)[0],strict=False)
+    username = request_data.get('WEDORM-uid')
     if not username:
         return AppResponse('请先登录',401)
     conn = get_db()
@@ -338,7 +331,8 @@ def myBorrowList():
                 'ddl':date.today().isoformat()
             }],200)
 
-    username = login_session.get('username')
+    request_data = json.loads(list(request.form)[0],strict=False)
+    username = request_data.get('WEDORM-uid')
     if not username:
         return AppResponse('请先登录',401)
     conn = get_db()
@@ -381,6 +375,9 @@ def updateMyItem():
         return AppResponse("OK",200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
+    username = request_data.get('WEDORM-uid')
+    if not username:
+        return AppResponse('请先登录',401)
     sql = f"update ITEMS BRAND=%s, DESCRIPTION=%s, QTY=%s, IS_CONSUME=%s where iid=%s;"
     with conn:
         with conn.cursor() as cursor:
@@ -408,6 +405,9 @@ def searchItem():
                 }],200)
     conn = get_db()
     request_data = json.loads(list(request.form)[0],strict=False)
+    username = request_data.get('WEDORM-uid')
+    if not username:
+        return AppResponse('请先登录',401)
     sql = f"select * from ITEMS where NAME LIKE %s;"
     item_name: str = request_data['name']
     item_info = []
@@ -445,12 +445,12 @@ def borrowItem():
         - 参数: userid
         - 返回：HTTP状态
     """
-    username = login_session.get('username')
+    request_data = json.loads(list(request.form)[0],strict=False)
+    username = request_data.get('WEDORM-uid')
     if not username:
         return AppResponse('请先登录',401)
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
-    request_data = json.loads(list(request.form)[0],strict=False)
     iid = request_data['iid']
     ddl_list = request_data['ddl'].split('-')
     modi, ddl = datetime.now(),datetime.datetime(ddl_list[0],ddl_list[1],ddl_list[2])
@@ -501,14 +501,14 @@ def returnItem():
     - param: 对象userid，物品id，数量
     - 返回：HTTP状态
     """
-    username = login_session.get('username')
+    request_data = json.loads(list(request.form)[0],strict=False)
+    username = request_data.get('WEDORM-uid')
     if not username:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("OK",200)
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
-    request_data = json.loads(list(request.form)[0],strict=False)
     sid, iid = request_data['sid'],request_data['iid']
     time = datetime.now()
     sqlget = f"select * from SHARE where sid = %s;"
@@ -552,14 +552,14 @@ def deleteItem():
             - param：物品id，数量
             - 返回：HTTP状态
     """
-    username = login_session.get('username')
+    request_data = json.loads(list(request.form)[0],strict=False)
+    username = request_data.get('WEDORM-uid')
     if not username:
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse("OK",200)
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
-    request_data = json.loads(list(request.form)[0],strict=False)
     iid = request_data['iid']
     if not get_owner_by_iid(conn, iid)[1]==uid:
         conn.rollback()
@@ -582,7 +582,8 @@ def deleteItem():
 
 @app.route('/api/delete-user', methods=['POST'])
 def deleteUser():
-    username = login_session.get('username')
+    request_data = json.loads(list(request.form)[0],strict=False)
+    username = request_data.get('WEDORM-uid')
     if not username:
         return AppResponse('请先登录',401)
     conn = get_db()
@@ -593,7 +594,7 @@ def deleteUser():
             cursor.execute(sql, (uid,))
             logger.info(f'delete data from databse by id<{uid}>')
             conn.commit()
-    del login_session["uid"]
+    
     return AppResponse("OK",200)
 
 # @app.errorhandler(404)

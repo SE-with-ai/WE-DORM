@@ -10,7 +10,12 @@ async function make_request(url: string, data) {
     baseURL:"http://127.0.0.1:5000",
     url:url,
     // headers:{"Access-Control-Allow-Origin":"*"},
-    data:JSON.stringify(data),
+    data:JSON.stringify({
+      ...{
+        'WEDORM-uid':window.localStorage.getItem('WEDORM-uid') ?? "ANDY"
+      },
+      ...data
+    }),
     transformRequest: [function (data, headers) {
       // Do whatever you want to transform the data
       console.log('request',data)

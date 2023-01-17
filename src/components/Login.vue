@@ -3,7 +3,7 @@
           <h1 >登入</h1>
     <el-form :model="loginForm">
         <el-form-item @submit.prevent label="输入用户名：">
-        <el-input class="form-control" v-model="loginForm.username" placeholder="username" size="45"  required/>
+        <el-input class="form-control" @submit.prevent  v-model="loginForm.username" placeholder="username" size="45"  required/>
         </el-form-item>
         <el-form-item>
 
