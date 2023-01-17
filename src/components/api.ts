@@ -66,7 +66,10 @@ export async function itemsQuery(){
     return json.dumps({'code': 200, 'My item': my_item, 'is borrowing': borrowing_item})
     */
     let response =[] as ItemOwned[];
-  await make_request("/api/items", {}).then((res)=>{response = res});
+    
+  await make_request("/api/items", {}).then((res)=>{
+    console.log('itemsQuery response',res)
+    response = res?.data});
   return response
 }
 export async function borrowListQuery() {
