@@ -2,7 +2,7 @@
    <div class="container">
           <h1 >登入</h1>
     <el-form :model="loginForm">
-        <el-form-item label="输入用户名：">
+        <el-form-item @submit.prevent label="输入用户名：">
         <el-input class="form-control" v-model="loginForm.username" placeholder="username" size="45"  required/>
         </el-form-item>
         <el-form-item>

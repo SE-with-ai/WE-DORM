@@ -55,7 +55,7 @@ def insert_user(conn, arg) -> int:
     with conn:
         with conn.cursor() as cursor:
             data = arg
-            result = cursor.execute(usersql, (data['name'],data['dorm'],data['email']))
+            result = cursor.execute(usersql, (data,'',''))
             result = cursor.fetchone()
             cursor.execute(virsql, (result[0],0)) # 功德初始值为0
             logger.info(f'add data<{result}> to the databse')

@@ -77,9 +77,7 @@ def get_db():
 
 @app.teardown_request
 def release_db(_):
-    if IS_FRONTEND_DEBUG:
-        return
-    if hasattr(g,'db_conn'):
+    if not IS_FRONTEND_DEBUG and hasattr(g,'db_conn'):
         g.db_conn.close()
         g.pop('db_conn')
 
@@ -124,7 +122,7 @@ def login():
 
     # Ensure username exists and password is correct
     if not visitor :
-        insert_user(conn,username)
+        insert_user(conn,data)
         visitor = get_data_by_name(conn,username,'USERS')
     print(visitor)
     assert(len(visitor)>0)

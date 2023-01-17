@@ -158,16 +158,20 @@ export async function deleteUser() {
   window.sessionStorage.removeItem('WEDORM-uid')
 }
 
-export async function loginFunc(router,name:string){
+export async function loginFunc(name:string){
   let response=  '';
   // window.alert(name)
   await make_request("/login",{username:name}).then((res)=>{response = res;})
-  if (response != '')
+  if (response !== '')
   {
     console.log('login:',response)
-    window.sessionStorage['WEDORM-uid'] = response
+    window.sessionStorage.putItem('WEDORM-uid' ,response)
   }
-  else console.log('empty response')
+  else 
+  {
+    console.log('empty response')
+    window.alert('pause')
+  }
   // const router = useRouter() 
   // router.push('/')
 }
