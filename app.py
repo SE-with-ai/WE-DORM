@@ -455,9 +455,10 @@ def borrowItem():
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     iid = request_data['iid']
     ddl_list = request_data['ddl'].split('-')
-    modi, ddl = datetime.now(),datetime.datetime(ddl_list[0],ddl_list[1],ddl_list[2])
+    modi, ddl = datetime.datetime.now(),datetime.datetime(int(ddl_list[0]),int(ddl_list[1]),int(ddl_list[2]))
     data = get_item_by_id(conn, iid)
-    is_consume = request_data[qty]
+    # is_consume = request_data[qty]
+    is_consume = 0
     qty = data[4]
     owner_id = get_owner_by_iid(conn, iid)[1]
     if owner_id == uid:
