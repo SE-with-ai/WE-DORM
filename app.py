@@ -113,8 +113,6 @@ def login():
     username = data.get("username")
     # username = 'ANDY'
     if IS_FRONTEND_DEBUG:
-        # login_session['username'] = username
-        print('login: login_session[\'username\'] is',login_session['username'])
         return AppResponse(username,200)
     # Query database for username
     conn = get_db()
@@ -161,6 +159,7 @@ def insertItem():
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     data = json.loads(request_data['item'])
     uid = get_data_by_name(conn,username,'USERS')[0][0]
+    print(username)
     iid = insert_item(conn, data,commit=False)
     if not iid:
         conn.rollback()
@@ -230,7 +229,7 @@ def virlogQuery():
     request_data = json.loads(list(request.form)[0],strict=False)
     username = request_data.get('WEDORM-uid')
     print('virlog: username is ',username)
-    if not username:
+    if not username or username=='undefined':
         return AppResponse('请先登录',401)
     if IS_FRONTEND_DEBUG: 
         return AppResponse(['this','is','a','test'],200)
@@ -446,6 +445,8 @@ def borrowItem():
         - 参数: userid
         - 返回：HTTP状态
     """
+    if IS_FRONTEND_DEBUG:
+        return AppResponse("OK",200)
     request_data = json.loads(list(request.form)[0],strict=False)
     username = request_data.get('WEDORM-uid')
     if not username:

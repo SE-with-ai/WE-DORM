@@ -1,10 +1,9 @@
 <template>
 
 <!-- 借物品form -->
-  <el-form :model="borrowForm" :if="showEditor">
-    <el-form-item></el-form-item>
+  <el-form :model="borrowForm" v-if="!showEditor">
     <el-form-item label="Item Name">
-      <el-input v-model="borrowForm.name" required="true" from="" disabled/>
+      <el-input v-model="borrowForm.name" required="true" disabled/>
     </el-form-item>
     <el-form-item label="Brand">
       <el-input v-model="borrowForm.brand" disabled/>
@@ -16,7 +15,7 @@
       <el-switch v-model="borrowForm.is_consume"  disabled/>
     </el-form-item>
     <el-form-item label="Date">
-      <el-date-picker v-model="borrowForm.ddl" type="date" placeholder="Pick a day" 
+      <el-date-picker v-model="borrowForm.ddl" placeholder="Pick a day" 
         :disabled-date="disabledDate" />
     </el-form-item>
     <el-form-item>
@@ -32,14 +31,19 @@
         v-model="query_string"
         placeholder="搜索想借的物品"
         :fetch-suggestions="onSearch"
+        debounce="300"
+        placement="bottom"
+        popper-class="el-popper"
+        teleported="false"
         @select="onSelectSuggestion"
-      />
+      >
+      </el-autocomplete>
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">
     <el-table-column prop="name" label="Item" width="180" />
-    <el-table-column prop="owner" label="Name" width="180" />
-    <el-table-column prop="start_time" label="Name" width="180" />
-    <el-table-column prop="ddl" label="Name" width="180" />
-    <el-table-column prop="time_remained" label="Name" width="180" />
+    <el-table-column prop="owner" label="Owner" width="180" />
+    <el-table-column prop="start_time" label="Date borrowed" width="180" />
+    <el-table-column prop="ddl" label="deadline" width="180" />
+    <el-table-column prop="time_remained" label="time remained" width="180" />
 
     <el-table-column label="Operations">
       <template #default="scope">
@@ -47,8 +51,7 @@
           size="small"
           type="danger"
           @click="handleReturn(scope.$index, scope.row)"
-          >归还</el-button
-        >
+          >归还</el-button>
       </template>
     </el-table-column>
   </el-table>
@@ -64,7 +67,7 @@ import { toNumber } from 'lodash';
 
 
 const tableRef = ref<InstanceType<typeof ElTable>>()
-const tableData= ref<ItemOwned[]>([])
+const tableData= ref<ItemToBorrow[]>([])
 
 
 
@@ -82,9 +85,9 @@ onMounted(()=>{
 })
 
 const query_string = ref('')
-const options = ref<BorrowSuggestion[]>([])
+const options = ref<{name:string,value:string}[]>([])
+const options_list = ref<BorrowSuggestion[]>([])
 const selected = ref<BorrowSuggestion>({
-  value:'',
   iid:0 ,
   item_name:'',
   brand:'',
@@ -101,29 +104,35 @@ watchEffect(async () => {
   // options.value = await response
 })
 const onSearch = (query: string, cb: (arg: any) => void)=>{
-  searchItem(query_string.value).then((res)=>{
-  console.log('search',query_string,res)
-  options.value = [];
+  searchItem(query).then((res)=>{
+  console.log('search',query,res)
+  // searchItem(query_string.value).then((res)=>{
+  // console.log('search',query_string.value,res)
+  options_list.value = [];
   for (let ress in res)
   {
-    options.value.push({
-      value: ress[1]+'('+ress[5]+')',
+    console.log('onSearch:parse',ress)
+    options_list.value.push({
       "iid": toNumber(ress[0]),
   "item_name":ress[1],
   "brand":ress[2],
   "description":ress[3],
   "owner_id": toNumber(ress[4]),
   "owner_name":ress[5], 
-  "is_consume":ress[6] as boolean,
+  "is_consume":ress[6] ==true,
   
     })
   }
 
   })
-    const results = query_string.value
+
+  options.value = options_list.value.map((item)=>({
+    name:item['iid'].toString(),
+    value:item['item_name']+'('+item['owner_name']+')'
+  }))
+    const results = options.value
     ? options.value
     : []
-
   clearTimeout(timeout)
   timeout = setTimeout(() => {
     console.log('results:',results,query)
@@ -134,7 +143,6 @@ const onSearch = (query: string, cb: (arg: any) => void)=>{
 
 const showEditor = ref(false)
 const borrowForm = ref({
-  value:'',
   iid: 0,// read from item chosen
   name:'',// read from item chosen
   brand:'',// read from item chosen
@@ -145,7 +153,6 @@ const borrowForm = ref({
 
 })
 const defaultForm = {
-  value:'',
   iid: 0,// read from item chosen
   name:'',// read from item chosen
   brand:'',// read from item chosen
@@ -160,15 +167,20 @@ const disabledDate = (time: Date) => {
   return time.getTime() < Date.now()
 }
 
-function onSelectSuggestion(item:BorrowSuggestion)
+function onSelectSuggestion(item_selected:{name:string,value:string})
 {
   // load data into form
-  borrowForm.value.iid = item.iid
-  borrowForm.value.name = item.item_name
-  if(item.brand)borrowForm.value.brand = item.brand
-  if(item.description)borrowForm.value.description = item.description
-  borrowForm.value.is_consume = item.is_consume
-  showEditor.value = true;
+  console.log('onselectsuggestion')
+  let item = options_list.value.filter((it)=>(it['iid'] === toNumber(item_selected.name)))
+  if(item.length===0 || item[0].iid == 0)return;
+  console.log(item[0])
+  window.alert(item[0])
+  borrowForm.value.iid = item[0]['iid']
+  borrowForm.value.name = item[0].item_name
+  if(item[0].brand)borrowForm.value.brand = item[0].brand
+  if(item[0].description)borrowForm.value.description = item[0].description
+  borrowForm.value.is_consume = item[0].is_consume
+  // showEditor.value = true;
 }
 
 const onBorrowSubmit = () => {
@@ -185,7 +197,10 @@ const onBorrowSubmit = () => {
 
 /* Inline #4 | http://127.0.0.1:5173/borrow */
 
-.el-picker-panel.el-date-picker {
+.el-autocomplete-suggestion,.el-popper{
+  background-color: white;
+}
+.el-picker-panel.el-date-picker{
   background-color: white;
 }
 
@@ -196,12 +211,15 @@ const onBorrowSubmit = () => {
 .el-form {
   display: grid;
 }
+el-form-item{
+  width:50%;
+}
 
 /* Inline #4 | http://127.0.0.1:5173/borrow */
 
 i>svg {
   width: 3em;
-  display: inline-block;
+  /* display: inline-block; */
 }
 
 </style>
