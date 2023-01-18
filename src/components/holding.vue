@@ -14,6 +14,9 @@
     <el-form-item label="Consumable">
       <el-checkbox v-model="editForm.is_consume" />
     </el-form-item>
+    <el-form-item label="Quantity" :hidden="!editForm.is_consume">
+      <el-input-number v-model="editForm.qty" />
+    </el-form-item>
     <el-form-item label="Tags（用','分开）">
       <el-input v-model="editForm.tag" />
     </el-form-item>
@@ -53,7 +56,7 @@
           v-for="tg in scope.row.tag"
           type="success"
           disable-transitions
-          >{{ tg }}</el-tag>
+          >{{ tg}}</el-tag>
       </template>
     </el-table-column>
     <el-table-column label="Operations">
@@ -120,7 +123,7 @@ const editForm = ref({
   name:'',
   brand:'',
   description:'',
-  qty:0,
+  qty:1,
   is_consume:false,
   tag:'',
 })
@@ -129,7 +132,7 @@ const defaultForm = {
   name:'',
   brand:'',
   description:'',
-  qty:0,
+  qty:1,
   is_consume:false,
   tag:'',
 }
@@ -239,5 +242,9 @@ form.example::after {
   content: "";
   clear: both;
   display: table;
+}
+i>svg{
+  width:2em;
+  display:block;
 }
 </style>

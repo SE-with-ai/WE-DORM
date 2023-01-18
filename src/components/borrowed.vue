@@ -1,7 +1,7 @@
 <template>
 
 <!-- 借物品form -->
-  <el-form :model="borrowForm" v-if="!showEditor">
+  <el-form :model="borrowForm" :hidden="!showEditor">
     <el-form-item label="Item Name">
       <el-input v-model="borrowForm.name" required="true" disabled/>
     </el-form-item>
@@ -99,13 +99,10 @@ const selected = ref<BorrowSuggestion>({
 let timeout=2000
 watchEffect(async () => {
   // await searchItem(query_string.value).then((res)=>{options.value=res})
-
-})
-const onSearch = (query: string, cb: (arg: any) => void)=>{
-   searchItem(query).then((res)=>{
+  searchItem(query_string.value).then((res)=>{
     console.log('searchItem returns',res)
 
-  console.log('search',query,res)
+  console.log('search',query_string.value,res)
   // searchItem(query_string.value).then((res)=>{
   // console.log('search',query_string.value,res)
   options_list.value = [];
@@ -116,8 +113,6 @@ const onSearch = (query: string, cb: (arg: any) => void)=>{
     options_list.value.push({
       "iid": toNumber(ress['iid']),
   "item_name":ress['name'],
-  "brand":ress[2],
-  "description":ress[3],
   "owner_id": toNumber(ress['owner_id']),
   "owner_name":ress['owner_name'], 
   "is_consume":false,
@@ -125,29 +120,57 @@ const onSearch = (query: string, cb: (arg: any) => void)=>{
     })
   }
    })
+})
+const onSearch = (query: string, cb: (arg: any) => void)=>{
+  //  searchItem(query).then((res)=>{
+  //   console.log('searchItem returns',res)
 
+  // console.log('search',query,res)
+  // // searchItem(query_string.value).then((res)=>{
+  // // console.log('search',query_string.value,res)
+  // options_list.value = [];
+  // for (let i = 0; i < res.length;++i)
+  // {
+  //   let ress = res[i]
+  //   console.log('onSearch:parse',ress)
+  //   options_list.value.push({
+  //     "iid": toNumber(ress['iid']),
+  // "item_name":ress['name'],
+  // "brand":ress[2],
+  // "description":ress[3],
+  // "owner_id": toNumber(ress['owner_id']),
+  // "owner_name":ress['owner_name'], 
+  // "is_consume":false,
   
+  //   })
+  // }
+  //  })
+setTimeout(()=>{
 
+  console.log('beore filter',options_list.value)
+  
   options.value = options_list.value.filter(
     (item)=>{
+      console.log('filter',item);
       return (item['item_name']!= undefined)
     }).map((item)=>{
-      console.log('filter',item);
+      console.log('map',item);
       return({
         name:item['iid'].toString(),
-      value:item['item_name']+'('+item['owner_name']+')'
+        value:item['item_name']+'('+item['owner_name']+')'
+      })
     })
-  })
     const results = options.value
     ? options.value
     : []
-  clearTimeout(timeout)
-  timeout = setTimeout(() => {
-    console.log('results:',results,options.value,query)
-    cb(results)
-  }, 3000 * Math.random())
-
-}
+    clearTimeout(timeout)
+    timeout = setTimeout(() => {
+      console.log('results:',results,options.value,query)
+      cb(results)
+    }, 3000 * Math.random())
+    
+  },1000)
+  }
 
 const showEditor = ref(false)
 const borrowForm = ref({
@@ -182,13 +205,13 @@ function onSelectSuggestion(item_selected:{name:string,value:string})
   let item = options_list.value.filter((it)=>(it['iid'] === toNumber(item_selected.name)))
   if(item.length===0 || item[0].iid == 0)return;
   console.log(item[0])
-  window.alert(item[0])
+  // window.alert(item[0])
   borrowForm.value.iid = item[0]['iid']
   borrowForm.value.name = item[0].item_name
   if(item[0].brand)borrowForm.value.brand = item[0].brand
   if(item[0].description)borrowForm.value.description = item[0].description
   borrowForm.value.is_consume = item[0].is_consume
-  // showEditor.value = true;
+  showEditor.value = true;
 }
 
 const onBorrowSubmit = () => {
@@ -201,7 +224,7 @@ const onBorrowSubmit = () => {
 
 </script>
 
-<style >
+<style scoped>
 
 /* Inline #4 | http://127.0.0.1:5173/borrow */
 
@@ -216,7 +239,7 @@ const onBorrowSubmit = () => {
 
 /* Inline #4 | http://127.0.0.1:5173/borrow */
 
-.el-form {
+el-form{
   display: grid;
 }
 el-form-item{
