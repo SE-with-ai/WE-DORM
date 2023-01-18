@@ -4,16 +4,14 @@ import json
 from datetime import datetime,date
 from function import *
 
-from flask import Flask, g, jsonify,render_template, redirect, make_response, request,session as login_session
-from flask_cors import CORS,cross_origin
+from flask import Flask, g, jsonify,request,json
+from flask_cors import CORS
 # from flask_httpauth import HTTPBasicAuth
 # from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 # from itsdangerous import BadSignature, SignatureExpired
 # from passlib.apps import custom_app_context
 from flask import Flask
-import os, logging, sys, datetime
-from copy import deepcopy
-from flask import Flask, flash, redirect, render_template, request, session as login_session, json
+import os, datetime
 from flask_session import Session 
 from tempfile import mkdtemp
 # from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
@@ -457,7 +455,7 @@ def borrowItem():
     ddl_list = request_data['ddl'].split('-')
     modi, ddl = datetime.now(),datetime.datetime(ddl_list[0],ddl_list[1],ddl_list[2])
     data = get_item_by_id(conn, iid)
-    is_consume = request_data[qty]
+    is_consume = request_data['is_consume']
     qty = data[4]
     owner_id = get_owner_by_iid(conn, iid)[1]
     if owner_id == uid:
