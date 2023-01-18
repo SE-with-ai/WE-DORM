@@ -40,7 +40,8 @@ onBeforeMount(()=>{
     let ress = [] as {
   text:string
 }[]
-  for (let st in res){
+  for (let t =0;t< res.length;++t){
+    let st = res[t]
     ress.push({text:st})
   }
   tableData.value = ress;

@@ -19,17 +19,19 @@
     </el-form-item>
 
     <el-form-item>
-      <!--TODO:correct function to call-->
       <el-button type="primary" @click="handleEditSubmit" :hidden="isCreate">Edit</el-button>
+      </el-form-item>
+    <el-form-item>
+      <!--TODO:correct function to call-->
       <el-button type="primary" @click="handleCreateSubmit" :hidden="!isCreate">Provide</el-button>
-      <el-button @click="showEditor=false">Cancel</el-button>
+      <el-button @click="showEditor=false;isCreate=true">Cancel</el-button>
     </el-form-item>
   </el-form>
 
 
   <!-- tag control buttons -->
   <!-- <el-button @click="resetTagFilter">reset date filter</el-button> -->
-  <el-button @click="handleCreate" :hidden="showEditor">增加物品</el-button>
+  <el-button @click="handleCreate" >增加物品</el-button>
   
   <!-- owned item list -->
   <el-table ref="tableRef" row-key="iid" :data="tableData" style="width: 100%">
@@ -143,6 +145,7 @@ function handleEdit(index:number,row:ItemOwned)
   if(item.description)editForm.value.description = item.description
   editForm.value.qty = item.qty
   editForm.value.is_consume = item.is_consume
+  isCreate.value = false
   if(item.tag)editForm.value.tag = item.tag.join(', ')
 }
 
@@ -150,6 +153,7 @@ const handleEditSubmit = () => {
 
 let item= editForm.value
     console.log(item)
+    if (!item.name)return
     let itemTags = [] as string[]
     itemTags= item['tag'].split(',')
     itemTags.forEach((tag)=>tag.trim())
@@ -179,6 +183,7 @@ function handleCreate()
 const handleCreateSubmit = () => {
 
 let item= editForm.value
+    if (!item.name)return
     console.log(item)
     let itemTags = [] as string[]
     itemTags= item['tag'].split(',')
