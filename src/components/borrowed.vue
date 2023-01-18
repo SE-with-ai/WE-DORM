@@ -114,12 +114,12 @@ const onSearch = (query: string, cb: (arg: any) => void)=>{
     let ress = res[i]
     console.log('onSearch:parse',ress)
     options_list.value.push({
-      "iid": toNumber(ress[0]),
-  "item_name":ress[1],
+      "iid": toNumber(ress['iid']),
+  "item_name":ress['name'],
   "brand":ress[2],
   "description":ress[3],
-  "owner_id": toNumber(ress[4]),
-  "owner_name":ress[5], 
+  "owner_id": toNumber(ress['owner_id']),
+  "owner_name":ress['owner_name'], 
   "is_consume":false,
   
     })
@@ -128,18 +128,22 @@ const onSearch = (query: string, cb: (arg: any) => void)=>{
 
   
 
-  options.value = options_list.value.filter((item)=>(item['name']!= undefined)).map((item)=>{
-    console.log(item)
-    return({
-    name:item['iid'].toString(),
-    value:item['item_name']+'('+item['owner_name']+')'
-  })})
+  options.value = options_list.value.filter(
+    (item)=>{
+      return (item['item_name']!= undefined)
+    }).map((item)=>{
+      console.log('filter',item);
+      return({
+        name:item['iid'].toString(),
+      value:item['item_name']+'('+item['owner_name']+')'
+    })
+  })
     const results = options.value
     ? options.value
     : []
   clearTimeout(timeout)
   timeout = setTimeout(() => {
-    console.log('results:',results,query)
+    console.log('results:',results,options.value,query)
     cb(results)
   }, 3000 * Math.random())
 
