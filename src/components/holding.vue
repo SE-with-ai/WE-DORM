@@ -88,21 +88,19 @@ const filterTag = (value: string[], row: ItemOwned) => {
   return value.length === 0 || row.tag.sort().toString() === value.sort().toString()
 }
 const tagsRef = ref<string[]>([])
-const filterHandler = (
-  value: string,
-  row: ItemOwned,
-  column: TableColumnCtx<ItemOwned>
-) => {
-  const property = column['property']
-  return row[property] === value
-}
+// const filterHandler = (
+//   value: string,
+//   row: ItemOwned,
+//   column: TableColumnCtx<ItemOwned>
+// ) => {
+//   const property = column['property']
+//   return row[property] === value
+// }
 
 const handleDelete = (index: number, row: ItemOwned) => {
-  console.log(index, row)
+  console.log('delete', row)
 
-  let status = deleteItem(row.iid)
-  console.log(status)
-  if(typeof status === typeof {} )window.alert(status?.get('msg'))
+  deleteItem(row.iid)
 }
 
 
@@ -110,6 +108,10 @@ const handleDelete = (index: number, row: ItemOwned) => {
 onBeforeMount(()=>{
   itemsQuery().then((res)=>{
     tableData.value = res;
+    tagsRef.value = [];
+    for(let item in tableData.value){
+      tagsRef.value.push(item['tag'])
+    }
     })
 })
 
