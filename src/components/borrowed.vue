@@ -31,10 +31,10 @@
         v-model="query_string"
         placeholder="搜索想借的物品"
         :fetch-suggestions="onSearch"
-        debounce="300"
+        :debounce="300"
         placement="bottom"
         popper-class="el-popper"
-        teleported="false"
+        :teleported="false"
         @select="onSelectSuggestion"
       >
       </el-autocomplete>
@@ -98,19 +98,20 @@ const selected = ref<BorrowSuggestion>({
 })
 let timeout=2000
 watchEffect(async () => {
-  // const response = await searchItem(query_string.value)
   // await searchItem(query_string.value).then((res)=>{options.value=res})
 
-  // options.value = await response
 })
 const onSearch = (query: string, cb: (arg: any) => void)=>{
-  searchItem(query).then((res)=>{
+   searchItem(query).then((res)=>{
+    console.log('searchItem returns',res)
+
   console.log('search',query,res)
   // searchItem(query_string.value).then((res)=>{
   // console.log('search',query_string.value,res)
   options_list.value = [];
-  for (let ress in res)
+  for (let i = 0; i < res.length;++i)
   {
+    let ress = res[i]
     console.log('onSearch:parse',ress)
     options_list.value.push({
       "iid": toNumber(ress[0]),
@@ -119,17 +120,20 @@ const onSearch = (query: string, cb: (arg: any) => void)=>{
   "description":ress[3],
   "owner_id": toNumber(ress[4]),
   "owner_name":ress[5], 
-  "is_consume":ress[6] ==true,
+  "is_consume":false,
   
     })
   }
+   })
 
-  })
+  
 
-  options.value = options_list.value.map((item)=>({
+  options.value = options_list.value.filter((item)=>(item['name']!= undefined)).map((item)=>{
+    console.log(item)
+    return({
     name:item['iid'].toString(),
     value:item['item_name']+'('+item['owner_name']+')'
-  }))
+  })})
     const results = options.value
     ? options.value
     : []
@@ -170,7 +174,7 @@ const disabledDate = (time: Date) => {
 function onSelectSuggestion(item_selected:{name:string,value:string})
 {
   // load data into form
-  console.log('onselectsuggestion')
+  console.log('onselectsuggestion',item_selected)
   let item = options_list.value.filter((it)=>(it['iid'] === toNumber(item_selected.name)))
   if(item.length===0 || item[0].iid == 0)return;
   console.log(item[0])

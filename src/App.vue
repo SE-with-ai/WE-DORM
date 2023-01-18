@@ -17,6 +17,7 @@
             <el-button @click="deleteUserConfirm=!deleteUserConfirm" :if="loggedin">删除账号</el-button>
           <el-button @click="trick=!trick" :hidden="!deleteUserConfirm">确定？</el-button>
           <el-button :hidden="!trick">不让你删</el-button>
+          <el-button @click="logout">登出</el-button>
       </el-header>
       <el-main>
         <router-view/>
@@ -36,6 +37,10 @@ import { useRouter } from 'vue-router'
   const trick = ref(false)
   const loggedin = ref(false) 
   // computed(()=>{window.localStorage.getItem('WEDORM-uid') !== undefined;})
+  function logout(){
+    window.localStorage.clear()
+    window.location.reload()
+  }
 </script>
 <style scoped>
 
