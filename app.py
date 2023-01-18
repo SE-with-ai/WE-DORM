@@ -304,8 +304,9 @@ def myItemList():
                 'qty':item_info[4],
                 'is_consume':item_info[5],
                 'borrowing':borrowing,
-                'tag':tags,
+                'tag':[t[0] for t in tags],
             }
+            print(item['tag'])
             my_item.append(item)
 
         logger.info(f'select data<{my_item}> from databse')
@@ -375,12 +376,12 @@ def updateMyItem():
     username = request_data.get('WEDORM-uid')
     if not username:
         return AppResponse('请先登录',401)
-    sql = f"update ITEMS BRAND=%s, DESCRIPTION=%s, QTY=%s, IS_CONSUME=%s where iid=%s;"
+    sql = f"update ITEMS SET BRAND=%s, DESCRIPTION=%s, QTY=%s, IS_CONSUME=%s where iid=%s;"
     with conn:
         with conn.cursor() as cursor:
             result = cursor.execute(sql, (request_data['brand'], request_data['description'], request_data['qty'], request_data['is_consume'], request_data['iid']))
             # if result[0] == "UPDATE 0": return AppResponse("failed", 500)
-            result = cursor.fetchone()
+            # result = cursor.fetchone()
             logger.info(f'update data<{result}> to the item')
             conn.commit()
     return AppResponse("OK",200)
@@ -414,17 +415,18 @@ def searchItem():
         result = cursor.fetchall()
         for row in result:
             owner = get_owner_by_iid(conn,row[0])
-            owner_name = get_user_by_id(conn,owner[1])[1]
+            owner_name = get_user_by_id(conn,owner[1])
             if not get_sharing_by_item_id(conn,row[0]):
                 # return items not borrowed
+                print('searchItem:',owner_name)
                 item_info.append({
                     'iid':row[0],
                     'name':row[1],
                     'owner_id':owner[1],
-                    'owner_name':owner_name,
+                    'owner_name':str(owner_name[1]),
                 })
-        logger.info(f'select data<{result}> from item')
-    return AppResponse(result,200)
+        logger.info(f'select data<{item_info}> from item')
+    return AppResponse(item_info,200)
 
 # 借流程：首先搜索物品，在返回的列表中选择是要借哪一个，把被选中的物品的id传入下面的borrow函数
 # borrow函数没有判断是否可借，因为搜索的时候已经返回了可借列表
@@ -453,9 +455,11 @@ def borrowItem():
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     iid = request_data['iid']
     ddl_list = request_data['ddl'].split('-')
-    modi, ddl = datetime.now(),datetime.datetime(ddl_list[0],ddl_list[1],ddl_list[2])
+    print(ddl_list)
+    modi, ddl = datetime.datetime.now(),datetime.datetime(int(ddl_list[0]),int(ddl_list[1]),int(ddl_list[2]))
     data = get_item_by_id(conn, iid)
-    is_consume = request_data['is_consume']
+    # is_consume = request_data[qty]
+    is_consume = 0
     qty = data[4]
     owner_id = get_owner_by_iid(conn, iid)[1]
     if owner_id == uid:

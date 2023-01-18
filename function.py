@@ -68,7 +68,7 @@ def insert_share(conn, uid, iid, modi, ddl,commit=True) -> int:
     Args:
         cnn ([type]): the connection object to the databse
     """
-    sql = f"insert into SHARE (UID,IID,MOD,DDL) values (%s,%s,%s,%s) RETURNING *;"
+    sql = f"insert into SHARE (UID,IID,MODIFIED,DDL) values (%s,%s,%s,%s) RETURNING *;"
     with conn:
         with conn.cursor() as cursor:
             result = cursor.execute(sql, (uid, iid, modi, ddl))
@@ -131,10 +131,10 @@ def insert_virlog(conn, uid, log_content,commit=True) -> int:
     Args:
         cnn ([type]): the connection object to the databse
     """
-    sql = f"insert into VIRTUE (VIRTUE) values (%s) RETURNING *;"
+    sql = f"insert into VIRLOG (VIRLOG,uid) values (%s,%s) RETURNING *;"
     with conn:
         with conn.cursor() as cursor:
-            result = cursor.execute(sql, (uid, log_content))
+            result = cursor.execute(sql, (log_content,uid))
             result = cursor.fetchone()
             logger.info(f'add data<{result}> to the virtue log')
             if commit: conn.commit()
@@ -263,11 +263,11 @@ def update_virtue(conn, uid, num,commit=True):
             virtue_old = cursor.fetchone()[1]
             logger.info(f'select data<{virtue_old}> from virtue')
 
-    sql = f"update VIRTUE VIRTUE=%s where uid=%s;"
+    sql = f"update VIRTUE SET VIRTUE=%s where uid=%s;"
     with conn:
         with conn.cursor() as cursor:
             result = cursor.execute(sql, (virtue_old + num, uid))
-            result = cursor.fetchone()
+            # result = cursor.fetchone()
             logger.info(f'update data<{result}> to the virtue')
             conn.commit()
 
