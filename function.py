@@ -2,7 +2,7 @@ import json
 from datetime import date, datetime
 from functools import wraps
 from flask import session,redirect
-import psycopg2 
+import sqlite3 
 import logging
 from flask import session,redirect
 from functools import wraps
@@ -27,16 +27,13 @@ def login_required(f):
 
 
 def create_conn():
-    """get connection from envrionment variable by the conn factory
+    """
+    Get connection from SQLite database.
 
     Returns:
-        [type]: the psycopg2's connection object
+        [type]: SQLite connection object
     """
-    conn = psycopg2.connect(database="wedorm", 
-                            user="myfinal", 
-                            password="cat_2333", 
-                            host="192.168.0.107", 
-                            port="5432") 
+    conn = sqlite3.connect("database.db")
     return conn
 
 # insert 系列函数的返回值都是对应的id， 比如uid/sid/iid， 但是其他函数例如查询返回的是整个list，所以不要直接从前端调用这些基本函数
@@ -47,228 +44,202 @@ def insert_user(conn, arg) -> int:
     分别添加一行user和一行virtue
     uid自增生成， arg需要传入name， dorm， email为key的字典
     Args:
-        cnn ([type]): the connection object to the databse
+        conn (sqlite3.Connection): 数据库连接对象
+        arg (dict): 用户数据
+    Returns:
+        int: 插入的用户ID
     """
-
-    usersql = f"insert into USERS (NAME,DORM,EMAIL) values (%s,%s,%s) RETURNING *;"
-    virsql = f"insert into VIRTUE (UID, VIRTUE) values (%s,%s) RETURNING *;"
+    usersql = "INSERT INTO USERS (NAME, DORM, EMAIL) VALUES (?, ?, ?);"
+    virsql = "INSERT INTO VIRTUE (UID, VIRTUE) VALUES (?, ?);"
     with conn:
-        with conn.cursor() as cursor:
-            data = arg
-            result = cursor.execute(usersql, (data,'',''))
-            result = cursor.fetchone()
-            cursor.execute(virsql, (result[0],0)) # 功德初始值为0
-            logger.info(f'add data<{result}> to the databse')
+        cursor = conn.cursor()
+        cursor.execute(usersql, (arg['name'], arg['dorm'], arg['email']))
+        uid = cursor.lastrowid
+        cursor.execute(virsql, (uid, 0))  # 功德初始值为0
+        logger.info(f"添加数据<{uid}>到数据库")
+        conn.commit()
+    return uid
+
+def insert_share(conn, uid, iid, modi, ddl, commit=True) -> int:
+    """插入共享数据
+    Args:
+        conn (sqlite3.Connection): 数据库连接对象
+        uid (int): 用户ID
+        iid (int): 项ID
+        modi (str): 修改信息
+        ddl (str): 截止日期
+        commit (bool, optional): 是否提交事务. Defaults to True.
+    Returns:
+        int: 插入的共享数据ID
+    """
+    sql = "INSERT INTO SHARE (UID, IID, MODIFIED, DDL) VALUES (?, ?, ?, ?);"
+    with conn:
+        cursor = conn.cursor()
+        cursor.execute(sql, (uid, iid, modi, ddl))
+        sid = cursor.lastrowid
+        logger.info(f"添加数据<{sid}>到数据库")
+        if commit:
             conn.commit()
-    return result if result else None
+    return sid
 
-def insert_share(conn, uid, iid, modi, ddl,commit=True) -> int:
-    """insert item data
-
+def insert_item(conn, arg, commit=True) -> int:
+    """插入项数据
     Args:
-        cnn ([type]): the connection object to the databse
-    """
-    sql = f"insert into SHARE (UID,IID,MODIFIED,DDL) values (%s,%s,%s,%s) RETURNING *;"
-    with conn:
-        with conn.cursor() as cursor:
-            result = cursor.execute(sql, (uid, iid, modi, ddl))
-            result = cursor.fetchone()
-            logger.info(f'add data<{result}> to the databse')
-            if commit: conn.commit()
-    return result if result else None
-
-def insert_item(conn, arg,commit=True) -> int:
-    """insert item data
-
-    Args:
-        cnn ([type]): the connection object to the databse
-    """
-    sql = f"insert into ITEMS (NAME,BRAND,DESCRIPTION,QTY,IS_CONSUME) values (%s,%s,%s,%s,%s) RETURNING *;"
-    with conn:
-        with conn.cursor() as cursor:
-            data = arg
-            result = cursor.execute(sql, (data['name'],data['brand'],data['description'],data['qty'],data['is_consume']))
-            result = cursor.fetchone()
-            logger.info(f'add data<{result}> to the databse')
-            if commit: conn.commit()
-    return result[0] if result else None
-
-def insert_own(conn, uid, iid,commit=True) -> int:
-    """insert item data
-
-    Args:
-        cnn ([type]): the connection object to the databse
-    """
-    sql = f"insert into OWN (UID,IID) values (%s,%s) RETURNING *;"
-    with conn:
-        with conn.cursor() as cursor:
-            result = cursor.execute(sql, (uid,iid))
-            # result = cursor.execute(sql, (uid,1))
-            result = cursor.fetchone()
-            logger.info(f'add data<{result}> to the databse')
-            if commit: conn.commit()
-    return result[0] if result else None
-
-def insert_tag(conn, cid, iid,commit=True) -> int:
-    """insert label data
-
-    Args:
-        cnn ([type]): the connection object to the databse
-    """
-    sql = f"insert into TAGS (NAME,IID) values (%s,%s) RETURNING *;"
-    with conn:
-        with conn.cursor() as cursor:
-            result = cursor.execute(sql, (cid, iid))
-            result = cursor.fetchone()
-            print(result)
-            logger.info(f'add data<{result}> to the databse')
-            if commit: conn.commit()
-    return result if result else None
-
-def insert_virlog(conn, uid, log_content,commit=True) -> int:
-    """insert virtue log
-
-    Args:
-        cnn ([type]): the connection object to the databse
-    """
-    sql = f"insert into VIRLOG (VIRLOG,uid) values (%s,%s) RETURNING *;"
-    with conn:
-        with conn.cursor() as cursor:
-            result = cursor.execute(sql, (log_content,uid))
-            result = cursor.fetchone()
-            logger.info(f'add data<{result}> to the virtue log')
-            if commit: conn.commit()
-    return result if result else None
-
-def get_item_by_id(conn, id: int):
-    """fetch data by id
-
-    Args:
-        conn ([type]): the connection object
-        id (int): the primary key of the table
-
+        conn (sqlite3.Connection): 数据库连接对象
+        arg (dict): 项数据
+        commit (bool, optional): 是否提交事务. Defaults to True.
     Returns:
-        [type]: the tuple data of the table
+        int: 插入的项ID
     """
-    sql = f"select * from ITEMS where iid = %s;"
+    sql = "INSERT INTO ITEMS (NAME, BRAND, DESCRIPTION, QTY, IS_CONSUME) VALUES (?, ?, ?, ?, ?);"
     with conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sql, (id,))
-            result = cursor.fetchone()
-            logger.info(f'select data<{result}> from item')
+        cursor = conn.cursor()
+        cursor.execute(sql, (arg['name'], arg['brand'], arg['description'], arg['qty'], arg['is_consume']))
+        iid = cursor.lastrowid
+        logger.info(f"添加数据<{iid}>到数据库")
+        if commit:
+            conn.commit()
+    return iid
+
+def insert_own(conn, uid, iid, commit=True) -> int:
+    """插入拥有数据
+    Args:
+        conn (sqlite3.Connection): 数据库连接对象
+        uid (int): 用户ID
+        iid (int): 项ID
+        commit (bool, optional): 是否提交事务. Defaults to True.
+    Returns:
+        int: 插入的拥有数据ID
+    """
+    sql = "INSERT INTO OWN (UID, IID) VALUES (?, ?);"
+    with conn:
+        cursor = conn.cursor()
+        cursor.execute(sql, (uid, iid))
+        oid = cursor.lastrowid
+        logger.info(f"添加数据<{oid}>到数据库")
+        if commit:
+            conn.commit()
+    return oid
+
+def insert_tag(conn, cid, iid, commit=True) -> int:
+    """插入标签数据
+    Args:
+        conn (sqlite3.Connection): 数据库连接对象
+        cid (int): 标签ID
+        iid (int): 项ID
+        commit (bool, optional): 是否提交事务. Defaults to True.
+    Returns:
+        int: 插入的标签数据ID
+    """
+    sql = "INSERT INTO TAGS (NAME, IID) VALUES (?, ?);"
+    with conn:
+        cursor = conn.cursor()
+        cursor.execute(sql, (cid, iid))
+        tid = cursor.lastrowid
+        logger.info(f"添加数据<{tid}>到数据库")
+        if commit:
+            conn.commit()
+    return tid
+
+def insert_virlog(conn, uid, log_content, commit=True) -> int:
+    """插入功德日志
+    Args:
+        conn (sqlite3.Connection): 数据库连接对象
+        uid (int): 用户ID
+        log_content (str): 日志内容
+        commit (bool, optional): 是否提交事务. Defaults to True.
+    Returns:
+        int: 插入的功德日志ID
+    """
+    sql = "INSERT INTO VIRLOG (VIRLOG, uid) VALUES (?, ?);"
+    with conn:
+        cursor = conn.cursor()
+        cursor.execute(sql, (log_content, uid))
+        vid = cursor.lastrowid
+        logger.info(f"添加数据<{vid}>到功德日志")
+        if commit:
+            conn.commit()
+    return vid
+
+def get_item_by_id(conn, id):
+    """Fetch data by id from ITEMS table"""
+    sql = "SELECT * FROM ITEMS WHERE iid = ?;"
+    with conn:
+        cursor = conn.cursor()
+        cursor.execute(sql, (id,))
+        result = cursor.fetchone()
+        logger.info(f"Select data<{result}> from item")
     return result
 
-def get_owner_by_iid(conn, id: int):
-    """fetch owner info by iid
-
-    Args:
-        conn ([type]): the connection object
-        id (int): the primary key of the table
-
-    Returns:
-        [type]: the tuple data of the table
-    """
-    sql = f"select * from OWN where iid = %s;"
+def get_owner_by_iid(conn, id):
+    """Fetch owner info by iid from OWN table"""
+    sql = "SELECT * FROM OWN WHERE iid = ?;"
     with conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sql, (id,))
-            result = cursor.fetchone()
-            logger.info(f'select data<{result}> from own')
+        cursor = conn.cursor()
+        cursor.execute(sql, (id,))
+        result = cursor.fetchone()
+        logger.info(f"Select data<{result}> from own")
     return result
 
-def get_tag_by_id(conn, id: int):
-    """fetch data by id
-
-    Args:
-        conn ([type]): the connection object
-        id (int): the primary key of the table
-
-    Returns:
-        [type]: the tuple data of the table
-    """
-    sql = f"select NAME from TAGS where iid = %s;"
+def get_tag_by_id(conn, id):
+    """Fetch data by id from TAGS table"""
+    sql = "SELECT NAME FROM TAGS WHERE iid = ?;"
     with conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sql, (id,))
-            result = cursor.fetchall()
-            logger.info(f'select data<{result}> from tags')
+        cursor = conn.cursor()
+        cursor.execute(sql, (id,))
+        result = cursor.fetchall()
+        logger.info(f"Select data<{result}> from tags")
     return result
 
-def get_user_by_id(conn, id: int):
-    """fetch data by id
-
-    Args:
-        conn ([type]): the connection object
-        id (int): the primary key of the table
-
-    Returns:
-        [type]: the tuple data of the table
-    """
-    sql = f"select * from USERS where uid = %s;"
+def get_user_by_id(conn, id):
+    """Fetch data by id from USERS table"""
+    sql = "SELECT * FROM USERS WHERE uid = ?;"
     with conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sql, (id,))
-            result = cursor.fetchone()
-            logger.info(f'select data<{result}> from user')
+        cursor = conn.cursor()
+        cursor.execute(sql, (id,))
+        result = cursor.fetchone()
+        logger.info(f"Select data<{result}> from user")
     return result
 
-def get_sharing_by_item_id(conn, id: int):
-    """fetch data by id
-
-    Args:
-        conn ([type]): the connection object
-        id (int): the primary key of the table
-
-    Returns:
-        [type]: the tuple data of the table
-    """
-    sql = f"select * from SHARE where iid = %s;"
+def get_sharing_by_item_id(conn, id):
+    """Fetch data by id from SHARE table"""
+    sql = "SELECT * FROM SHARE WHERE iid = ?;"
     with conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sql, (id,))
-            result = cursor.fetchone()
-            logger.info(f'select data<{result}> from share')
+        cursor = conn.cursor()
+        cursor.execute(sql, (id,))
+        result = cursor.fetchone()
+        logger.info(f"Select data<{result}> from share")
     return result
 
-def get_data_by_name(conn, item_name: str, table_name):
-    """fetch data by item_name
-
-    Args:
-        conn ([type]): the connection object
-        item_name: name of data queried
-        table_name: name of table queried, must by either USERS or ITEMS
-
-    Returns:
-        [type]: the tuple data of the table
-    """
-    sql = f"select * from {table_name} where NAME = %s;"
-    if not table_name in ['USERS','ITEMS','TAGS']:
+def get_data_by_name(conn, item_name, table_name):
+    """Fetch data by item_name from specified table"""
+    if table_name not in ["USERS", "ITEMS", "TAGS"]:
         return
+    sql = f"SELECT * FROM {table_name} WHERE NAME = ?;"
     with conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sql, (item_name,))
-            result = cursor.fetchall()
-            logger.info(f'select data<{result}> from databse')
+        cursor = conn.cursor()
+        cursor.execute(sql, (item_name,))
+        result = cursor.fetchall()
+        logger.info(f"Select data<{result}> from database")
     return result
 
-
-def update_virtue(conn, uid, num,commit=True):
+def update_virtue(conn, uid, num, commit=True):
     """
-    num是功德改变量，若减去则为负
+    num is the virtue change amount, if subtracting, use negative value
     """
-    sql = f"select * from VIRTUE where uid = %s;"
+    sql = "SELECT * FROM VIRTUE WHERE uid = ?;"
     with conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sql, (uid,))
-            virtue_old = cursor.fetchone()[1]
-            logger.info(f'select data<{virtue_old}> from virtue')
+        cursor = conn.cursor()
+        cursor.execute(sql, (uid,))
+        virtue_old = cursor.fetchone()[1]
+        logger.info(f"Select data<{virtue_old}> from virtue")
 
-    sql = f"update VIRTUE SET VIRTUE=%s where uid=%s;"
+    sql = "UPDATE VIRTUE SET VIRTUE = ? WHERE uid = ?;"
     with conn:
-        with conn.cursor() as cursor:
-            result = cursor.execute(sql, (virtue_old + num, uid))
-            # result = cursor.fetchone()
-            logger.info(f'update data<{result}> to the virtue')
+        cursor = conn.cursor()
+        result = cursor.execute(sql, (virtue_old + num, uid))
+        logger.info(f"Update data<{result}> to the virtue")
+        if commit:
             conn.commit()
 
 # if __name__ == '__main__':
