@@ -291,7 +291,8 @@ def myItemList():
         for row in result:
             iid = row[2]
             item_info = get_item_by_id(conn, iid)
-
+            if (item_info == None):
+                continue
             tags = get_tag_by_id(conn, item_info[0])
             
             borrowing = False
