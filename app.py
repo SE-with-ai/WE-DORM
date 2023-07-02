@@ -14,6 +14,7 @@ from flask import Flask
 import os, datetime
 from flask_session import Session 
 from tempfile import mkdtemp
+from contextlib import closing
 # from werkzeug.exceptions import default_exceptions, HTTPException, InternalServerError
 # from werkzeug.security import check_password_hash, generate_password_hash
 # from flask_sqlalchemy import SQLAlchemy
@@ -207,9 +208,9 @@ def virtueQuery():
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     # request_data = json.loads(list(request.form)[0],strict=False)
     
-    sql = f"select * from VIRTUE where uid = %s;"
+    sql = f"select * from VIRTUE where uid = ?;"
     with conn:
-        with conn.cursor() as cursor:
+        with closing(conn.cursor()) as cursor:
             cursor.execute(sql, (uid,))
             result = cursor.fetchone()
             logger.info(f'select data<{result}> from databse')
@@ -234,9 +235,9 @@ def virlogQuery():
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     # request_data = json.loads(list(request.form)[0],strict=False)
-    sql = f"select * from VIRLOG where uid = %s;"
+    sql = f"select * from VIRLOG where uid = ?;"
     with conn:
-        with conn.cursor() as cursor:
+        with closing(conn.cursor()) as cursor:
             cursor.execute(sql, (uid,))
             result = cursor.fetchall()
             logger.info(f'select data<{result}> from virlog')
@@ -281,9 +282,9 @@ def myItemList():
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     # request_data = json.loads(list(request.form)[0],strict=False)
-    sql = f"select * from OWN where uid = %s;"
+    sql = f"select * from OWN where uid = ?;"
     my_item = []
-    with conn.cursor() as cursor:
+    with closing(conn.cursor()) as cursor:
         cursor.execute(sql, (uid,))
         result = cursor.fetchall()
         # print(result)
@@ -336,9 +337,9 @@ def myBorrowList():
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     # request_data = json.loads(list(request.form)[0],strict=False)
-    sql = f"select * from SHARE where uid = %s;"
+    sql = f"select * from SHARE where uid = ?;"
     item_info = []
-    with conn.cursor() as cursor:
+    with closing(conn.cursor()) as cursor:
         cursor.execute(sql, (uid,))
         result = cursor.fetchall()
         for row in result: # 
@@ -376,9 +377,9 @@ def updateMyItem():
     username = request_data.get('WEDORM-uid')
     if not username:
         return AppResponse('请先登录',401)
-    sql = f"update ITEMS SET BRAND=%s, DESCRIPTION=%s, QTY=%s, IS_CONSUME=%s where iid=%s;"
+    sql = f"update ITEMS SET BRAND=?, DESCRIPTION=?, QTY=?, IS_CONSUME=? where iid=?;"
     with conn:
-        with conn.cursor() as cursor:
+        with closing(conn.cursor()) as cursor:
             result = cursor.execute(sql, (request_data['brand'], request_data['description'], request_data['qty'], request_data['is_consume'], request_data['iid']))
             # if result[0] == "UPDATE 0": return AppResponse("failed", 500)
             # result = cursor.fetchone()
@@ -406,11 +407,11 @@ def searchItem():
     username = request_data.get('WEDORM-uid')
     if not username:
         return AppResponse('请先登录',401)
-    sql = f"select * from ITEMS where NAME LIKE %s;"
+    sql = f"select * from ITEMS where NAME LIKE ?;"
     print("req_data:",request_data)
     item_name: str = request_data['name']
     item_info = []
-    with conn.cursor() as cursor:
+    with closing(conn.cursor()) as cursor:
         cursor.execute(sql, (item_name,))
         result = cursor.fetchall()
         for row in result:
@@ -477,9 +478,9 @@ def borrowItem():
         if qty == 0:
             conn.rollback()
             return AppResponse("物品已消耗完，请考虑补货或删除",500)
-        sql = f"update ITEMS QTY=%s where iid=%s;"
+        sql = f"update ITEMS QTY=? where iid=?;"
         with conn:
-            with conn.cursor() as cursor:
+            with closing(conn.cursor()) as cursor:
                 result = cursor.execute(sql, (qty-1, iid))
                 result = cursor.fetchone()
                 logger.info(f'update data<{result}> to the databse')
@@ -515,10 +516,10 @@ def returnItem():
     uid = get_data_by_name(conn,username,'USERS')[0][0]
     sid, iid = request_data['sid'],request_data['iid']
     time = datetime.datetime.now()
-    sqlget = f"select * from SHARE where sid = %s;"
-    sql = f"delete from SHARE where sid = %s;"
+    sqlget = f"select * from SHARE where sid = ?;"
+    sql = f"delete from SHARE where sid = ?;"
     with conn:
-        with conn.cursor() as cursor:
+        with closing(conn.cursor()) as cursor:
             cursor.execute(sqlget, (sid,))
             result = cursor.fetchone()
             logger.info(f'select data<{result}> from share')
@@ -526,9 +527,9 @@ def returnItem():
             iid = result[2]
             cursor.execute(sql, (sid,))
             logger.info(f'delete data from share by id<{sid}>')
-            sql = f"select * from OWN where iid = %s;"
+            sql = f"select * from OWN where iid = ?;"
             # with conn:
-                # with conn.cursor() as cursor:
+                # with closing(conn.cursor()) as cursor:
             cursor.execute(sql, (iid,))
             result = cursor.fetchone()
             logger.info(f'select data<{result}> from own')
@@ -576,13 +577,13 @@ def deleteItem():
         conn.rollback()
         return AppResponse("非物品拥有者，删除失败",500)
 
-    sql1 = f"delete from ITEMS where iid = %s;"
-    sql2 = f"delete from TAGS where iid = %s;"
+    sql1 = f"delete from ITEMS where iid = ?;"
+    sql2 = f"delete from TAGS where iid = ?;"
     if get_sharing_by_item_id(conn, iid):
         conn.rollback()
         return AppResponse("物品正在借出，无法删除",500)
     with conn:
-        with conn.cursor() as cursor:
+        with closing(conn.cursor()) as cursor:
             cursor.execute(sql1, (iid,))
             logger.info(f'delete data from items by id<{iid}>')
             cursor.execute(sql2, (iid,))
@@ -599,9 +600,9 @@ def deleteUser():
         return AppResponse('请先登录',401)
     conn = get_db()
     uid = get_data_by_name(conn,username,'USERS')[0][0]
-    sql = f"delete from USERS where uid = %s;"
+    sql = f"delete from USERS where uid = ?;"
     with conn:
-        with conn.cursor() as cursor:
+        with closing(conn.cursor()) as cursor:
             cursor.execute(sql, (uid,))
             logger.info(f'delete data from databse by id<{uid}>')
             conn.commit()
